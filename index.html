@@ -2,18 +2,15 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>YOLUVAMI Sistema Pro</title>
+<title>YOLUVAMI POS Profesional</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#1e3a8a">
 
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
+
 body{
 margin:0;
 font-family:Poppins;
@@ -25,13 +22,13 @@ background:#1e3a8a;
 color:white;
 padding:18px;
 text-align:center;
-font-size:18px;
-font-weight:700
+font-weight:700;
+font-size:18px
 }
 
 .container{
 padding:15px;
-max-width:600px;
+max-width:700px;
 margin:auto
 }
 
@@ -53,15 +50,11 @@ font-size:14px
 }
 
 button{
-background:linear-gradient(135deg,#1e3a8a,#2563eb);
+background:#2563eb;
 color:white;
 border:none;
 font-weight:600;
 cursor:pointer
-}
-
-button:active{
-transform:scale(.97)
 }
 
 .deleteBtn{
@@ -70,8 +63,7 @@ background:#dc2626
 
 table{
 width:100%;
-border-collapse:collapse;
-font-size:13px
+border-collapse:collapse
 }
 
 th,td{
@@ -90,48 +82,49 @@ width:40px;
 border-radius:8px
 }
 
-img.preview{
-width:100px;
-border-radius:12px;
-margin:10px 0
+.totalBox{
+font-size:22px;
+font-weight:700;
+color:#059669
 }
 
-.totalVentaBox{
-font-size:20px;
-font-weight:700;
-color:#059669;
-margin-top:10px
+.alerta{
+background:#fee2e2;
+padding:10px;
+border-radius:10px;
+margin-top:10px;
+color:#b91c1c;
+font-weight:600
 }
 
 canvas{
-width:100% !important;
-height:300px !important
+width:100%!important;
+height:250px!important
 }
 
-#instalarBtn{
-display:none;
-background:#059669
-}
 </style>
 </head>
 
 <body>
 
-<header>YOLUVAMI Sistema Profesional</header>
+<header>YOLUVAMI POS PROFESIONAL</header>
 
 <div class="container">
 
 <div class="card">
+
 <h3>Registrar Venta</h3>
 
-<input type="text" id="buscador" placeholder="Buscar producto...">
-<select id="productoSelect"></select>
-<img id="imgPreview" class="preview">
+<input id="buscar" placeholder="Buscar producto">
 
-<input type="number" id="cantidad" placeholder="Cantidad" min="1">
-<button onclick="agregarVenta()">Agregar Producto</button>
+<select id="producto"></select>
+
+<input type="number" id="cantidad" placeholder="Cantidad">
+
+<button onclick="agregar()">Agregar Producto</button>
 
 <table>
+
 <thead>
 <tr>
 <th>Producto</th>
@@ -140,268 +133,324 @@ background:#059669
 <th></th>
 </tr>
 </thead>
-<tbody id="tablaVenta"></tbody>
+
+<tbody id="tabla"></tbody>
+
 </table>
 
-<div class="totalVentaBox">
-Total: C$<span id="totalVenta">0</span>
+<div class="totalBox">
+Total C$ <span id="total">0</span>
 </div>
 
-<button onclick="finalizarVenta()">Finalizar Venta</button>
+<button onclick="finalizar()">Finalizar Venta</button>
+
+</div>
+
+
+<div class="card">
+
+<h3>Dashboard de Ventas</h3>
+
+<div id="dashboard"></div>
+
+<canvas id="grafica"></canvas>
+
 </div>
 
 <div class="card">
-<h3>Historial del Día</h3>
+
+<h3>Historial</h3>
+
 <div id="historial"></div>
-</div>
 
-<div class="card">
-<h3>Resumen General</h3>
-<div id="resumen"></div>
-<button id="instalarBtn">📲 Instalar Aplicación</button>
 </div>
 
 </div>
+
 
 <script>
 
-/* PRODUCTOS CON STOCK */
-const productos=[
-{name:"Mobil Special 20W-50",price:1060,img:"30.jpeg",stock:10},
-{name:"CLEAN ALL",price:180,img:"cleanall.jpg",stock:5},
-{name:"Freezetone Radiator",price:230,img:"freezetone.jpg",stock:8},
-{name:"Flamingo Foam Cleaner",price:150,img:"flamingo.jpg",stock:3},
-{name:"Shell Advance AX5 20W-50",price:280,img:"shell.jpg",stock:6},
-{name:"Letrero Taxi LED",price:600,img:"taxi.jpg",stock:4},
-{name:"Forro para Timón",price:450,img:"timon.jpg",stock:7}
-];
+/* INVENTARIO PERMANENTE */
 
-let ventaActual=[];
-let historial=JSON.parse(localStorage.getItem("ventasYoluvami"))||[];
+let inventario = JSON.parse(localStorage.getItem("inventarioYoluvami")) || [
 
-const select=document.getElementById("productoSelect");
-const buscador=document.getElementById("buscador");
-const imgPreview=document.getElementById("imgPreview");
+{name:"Mobil Special 20W-50",price:1060,stock:10,img:"30.jpeg",vendidos:0},
+{name:"CLEAN ALL",price:180,stock:5,img:"cleanall.jpg",vendidos:0},
+{name:"Freezetone Radiator",price:230,stock:8,img:"freezetone.jpg",vendidos:0},
+{name:"Flamingo Foam Cleaner",price:150,stock:3,img:"flamingo.jpg",vendidos:0},
+{name:"Shell Advance AX5 20W-50",price:280,stock:6,img:"shell.jpg",vendidos:0},
+{name:"Letrero Taxi LED",price:600,stock:4,img:"taxi.jpg",vendidos:0},
+{name:"Forro para Timón",price:450,stock:7,img:"timon.jpg",vendidos:0}
 
-function cargarProductos(lista){
-select.innerHTML="";
-lista.forEach(p=>{
-select.innerHTML+=`<option value="${productos.indexOf(p)}">${p.name} - C$${p.price} (Stock: ${p.stock})</option>`;
-});
-mostrarImagen();
-}
-cargarProductos(productos);
+]
 
-buscador.addEventListener("input",()=>{
-const texto=buscador.value.toLowerCase();
-cargarProductos(productos.filter(p=>p.name.toLowerCase().includes(texto)));
-});
+let historial = JSON.parse(localStorage.getItem("ventasYoluvami")) || []
 
-function mostrarImagen(){
-if(productos[select.value]){
-imgPreview.src=productos[select.value].img;
-}
-}
-select.addEventListener("change",mostrarImagen);
+let ventaActual=[]
 
-function agregarVenta(){
-const index=select.value;
-const cantidad=parseInt(document.getElementById("cantidad").value);
-if(!cantidad||cantidad<=0)return alert("Cantidad inválida");
+const select=document.getElementById("producto")
 
-const producto=productos[index];
+function cargarProductos(){
 
-if(producto.stock < cantidad){
-return alert("Stock insuficiente");
+select.innerHTML=""
+
+inventario.forEach((p,i)=>{
+
+select.innerHTML+=`<option value="${i}">${p.name} - C$${p.price} (Stock ${p.stock})</option>`
+
+})
+
 }
 
-producto.stock -= cantidad;
+cargarProductos()
 
-const subtotal=producto.price*cantidad;
-ventaActual.push({...producto,cantidad,subtotal});
-actualizarTabla();
-document.getElementById("cantidad").value="";
-cargarProductos(productos);
+
+/* AGREGAR PRODUCTO */
+
+function agregar(){
+
+let i=select.value
+let cantidad=parseInt(document.getElementById("cantidad").value)
+
+if(!cantidad)return
+
+let p=inventario[i]
+
+if(p.stock<cantidad){
+
+alert("Producto agotado")
+
+return
+
 }
 
-function actualizarTabla(){
-let total=0;
-const tbody=document.getElementById("tablaVenta");
-tbody.innerHTML="";
+p.stock-=cantidad
+p.vendidos+=cantidad
+
+let subtotal=p.price*cantidad
+
+ventaActual.push({...p,cantidad,subtotal})
+
+guardarInventario()
+
+renderVenta()
+
+}
+
+
+/* GUARDAR INVENTARIO */
+
+function guardarInventario(){
+
+localStorage.setItem("inventarioYoluvami",JSON.stringify(inventario))
+
+}
+
+
+/* TABLA VENTA */
+
+function renderVenta(){
+
+let tabla=document.getElementById("tabla")
+
+tabla.innerHTML=""
+
+let total=0
 
 ventaActual.forEach((p,i)=>{
-total+=p.subtotal;
-tbody.innerHTML+=`
+
+total+=p.subtotal
+
+tabla.innerHTML+=`
+
 <tr>
+
 <td class="product-row">
+
 <img src="${p.img}">
 ${p.name}
+
 </td>
+
 <td>${p.cantidad}</td>
+
 <td>C$${p.subtotal}</td>
-<td><button class="deleteBtn" onclick="eliminar(${i})">X</button></td>
-</tr>`;
-});
 
-document.getElementById("totalVenta").innerText=total;
+<td><button class="deleteBtn" onclick="borrar(${i})">X</button></td>
+
+</tr>
+
+`
+
+})
+
+document.getElementById("total").innerText=total
+
 }
 
-function eliminar(i){
-ventaActual.splice(i,1);
-actualizarTabla();
+
+/* ELIMINAR */
+
+function borrar(i){
+
+ventaActual.splice(i,1)
+
+renderVenta()
+
 }
 
-function finalizarVenta(){
-if(ventaActual.length===0)return alert("No hay productos");
 
-const fecha=new Date();
-const total=ventaActual.reduce((acc,p)=>acc+p.subtotal,0);
+/* FINALIZAR VENTA */
 
-historial.push({
-fecha:fecha.toLocaleDateString(),
-hora:fecha.toLocaleTimeString(),
+function finalizar(){
+
+if(ventaActual.length==0)return
+
+let total=ventaActual.reduce((a,b)=>a+b.subtotal,0)
+
+let venta={
+
+fecha:new Date().toLocaleString(),
 productos:ventaActual,
 total
-});
 
-localStorage.setItem("ventasYoluvami",JSON.stringify(historial));
-ventaActual=[];
-actualizarTabla();
-mostrarHistorial();
 }
+
+historial.push(venta)
+
+localStorage.setItem("ventasYoluvami",JSON.stringify(historial))
+
+generarFactura(venta)
+
+ventaActual=[]
+
+renderVenta()
+
+mostrarHistorial()
+
+cargarProductos()
+
+}
+
+
+/* FACTURA AUTOMATICA */
+
+async function generarFactura(v){
+
+const {jsPDF}=window.jspdf
+
+let doc=new jsPDF()
+
+doc.text("Factura YOLUVAMI",70,20)
+
+let y=40
+
+v.productos.forEach(p=>{
+
+doc.text(`${p.name} x${p.cantidad} C$${p.subtotal}`,10,y)
+
+y+=10
+
+})
+
+doc.text(`Total: C$${v.total}`,10,y+10)
+
+doc.save("Factura_YOLUVAMI.pdf")
+
+}
+
+
+/* HISTORIAL */
 
 function mostrarHistorial(){
-const div=document.getElementById("historial");
-div.innerHTML="";
-let ingresos=0;
 
-historial.forEach((v,index)=>{
-ingresos+=v.total;
+let div=document.getElementById("historial")
+
+div.innerHTML=""
+
+let ingresos=0
+
+historial.forEach(v=>{
+
+ingresos+=v.total
 
 div.innerHTML+=`
-<div style="background:#f9fafc;padding:15px;border-radius:12px;margin-bottom:12px">
-<div><strong>${v.fecha} - ${v.hora}</strong></div>
-<p>Total: C$${v.total}</p>
-<button class="deleteBtn" onclick="borrarRegistro(${index})">Eliminar</button>
-</div>`;
-});
 
-let alertaStock="";
-productos.forEach(p=>{
-if(p.stock<=3){
-alertaStock+=`⚠ ${p.name} stock bajo (${p.stock})<br>`;
-}
-});
+<div class="card">
 
-document.getElementById("resumen").innerHTML=`
-<p><strong>Total Ingresos:</strong> C$${ingresos}</p>
-<canvas id="grafica"></canvas>
-<button onclick="exportarExcel()">Descargar Excel</button>
-<button onclick="generarPDF()">Descargar PDF</button>
-<button onclick="enviarWhatsApp()">Enviar WhatsApp</button>
-<div style="margin-top:15px;color:#dc2626;font-weight:600">${alertaStock}</div>
-`;
+${v.fecha}
 
-crearGrafica();
+<br>
+
+Total C$${v.total}
+
+</div>
+
+`
+
+})
+
+crearDashboard(ingresos)
+
 }
 
-function borrarRegistro(i){
-if(confirm("¿Eliminar registro?")){
-historial.splice(i,1);
-localStorage.setItem("ventasYoluvami",JSON.stringify(historial));
-mostrarHistorial();
-}
+
+/* DASHBOARD */
+
+function crearDashboard(ingresos){
+
+let vendidos=inventario.sort((a,b)=>b.vendidos-a.vendidos)
+
+let top=vendidos[0]
+
+document.getElementById("dashboard").innerHTML=`
+
+Total Ingresos: <b>C$${ingresos}</b>
+
+<br><br>
+
+Producto más vendido:
+
+<b>${top.name}</b> (${top.vendidos})
+
+${top.stock<=2?'<div class="alerta">⚠ Producto casi agotado</div>':''}
+
+`
+
+crearGrafica()
+
 }
 
-let graficaActual=null;
+
+/* GRAFICA */
 
 function crearGrafica(){
-const ctx=document.getElementById("grafica");
-if(!ctx)return;
-if(graficaActual)graficaActual.destroy();
 
-const meses={};
+let ctx=document.getElementById("grafica")
 
-historial.forEach(v=>{
-let mes=v.fecha.split("/")[1];
-meses[mes]=(meses[mes]||0)+v.total;
-});
+let labels=inventario.map(p=>p.name)
 
-graficaActual=new Chart(ctx,{
+let data=inventario.map(p=>p.vendidos)
+
+new Chart(ctx,{
+
 type:"bar",
+
 data:{
-labels:Object.keys(meses),
+labels:labels,
 datasets:[{
-label:"Ingresos por Mes",
-data:Object.values(meses)
+label:"Productos vendidos",
+data:data
 }]
-},
-options:{responsive:true,maintainAspectRatio:false}
-});
 }
 
-function exportarExcel(){
-const wb=XLSX.utils.book_new();
-const ws=XLSX.utils.json_to_sheet(historial);
-XLSX.utils.book_append_sheet(wb,ws,"Ventas");
-XLSX.writeFile(wb,"Ventas_YOLUVAMI.xlsx");
+})
+
 }
 
-async function generarPDF(){
-const { jsPDF }=window.jspdf;
-const doc=new jsPDF();
-let y=20;
-doc.setFontSize(16);
-doc.text("YOLUVAMI Reporte",70,y);
-y+=15;
 
-let totalGeneral=0;
+mostrarHistorial()
 
-historial.forEach(v=>{
-doc.text(`${v.fecha} ${v.hora} - C$${v.total}`,10,y);
-y+=8;
-totalGeneral+=v.total;
-});
-
-doc.text(`TOTAL GENERAL: C$${totalGeneral}`,10,y+10);
-doc.save("Factura_YOLUVAMI.pdf");
-}
-
-function enviarWhatsApp(){
-let mensaje="📊 Resumen YOLUVAMI\n";
-let total=0;
-historial.forEach(v=>{
-mensaje+=`${v.fecha} ${v.hora} - C$${v.total}\n`;
-total+=v.total;
-});
-mensaje+=`\nTotal General: C$${total}`;
-window.open(`https://wa.me/?text=${encodeURIComponent(mensaje)}`);
-}
-
-mostrarHistorial();
-
-/* PWA */
-if("serviceWorker" in navigator){
-window.addEventListener("load",()=>{
-navigator.serviceWorker.register("sw.js");
-});
-}
-
-let deferredPrompt;
-
-window.addEventListener("beforeinstallprompt",(e)=>{
-e.preventDefault();
-deferredPrompt=e;
-document.getElementById("instalarBtn").style.display="block";
-});
-
-document.getElementById("instalarBtn").addEventListener("click",async ()=>{
-if(deferredPrompt){
-deferredPrompt.prompt();
-await deferredPrompt.userChoice;
-deferredPrompt=null;
-}
-});
 </script>
 
 </body>
