@@ -2,15 +2,18 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>YOLUVAMI POS Profesional</title>
+<title>YOLUVAMI Sistema Pro</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1e3a8a">
 
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
-
 body{
 margin:0;
 font-family:Poppins;
@@ -22,13 +25,13 @@ background:#1e3a8a;
 color:white;
 padding:18px;
 text-align:center;
-font-weight:700;
-font-size:18px
+font-size:18px;
+font-weight:700
 }
 
 .container{
 padding:15px;
-max-width:700px;
+max-width:600px;
 margin:auto
 }
 
@@ -50,11 +53,15 @@ font-size:14px
 }
 
 button{
-background:#2563eb;
+background:linear-gradient(135deg,#1e3a8a,#2563eb);
 color:white;
 border:none;
 font-weight:600;
 cursor:pointer
+}
+
+button:active{
+transform:scale(.97)
 }
 
 .deleteBtn{
@@ -63,7 +70,8 @@ background:#dc2626
 
 table{
 width:100%;
-border-collapse:collapse
+border-collapse:collapse;
+font-size:13px
 }
 
 th,td{
@@ -82,49 +90,87 @@ width:40px;
 border-radius:8px
 }
 
-.totalBox{
-font-size:22px;
-font-weight:700;
-color:#059669
+.bottomNav{
+position: fixed;
+bottom: 0;
+left: 0;
+width: 100%;
+height: 70px;
+background: #ffffff;
+display: flex;
+justify-content: space-around;
+align-items: center;
+border-top: 1px solid #eee;
+box-shadow: 0 -4px 15px rgba(0,0,0,.08);
+z-index: 999;
 }
 
-.alerta{
-background:#fee2e2;
-padding:10px;
-border-radius:10px;
-margin-top:10px;
-color:#b91c1c;
-font-weight:600
+.bottomNav a{
+text-decoration: none;
+color: inherit;
+flex:1;
+text-align:center;
+}
+
+.navItem{
+display: flex;
+flex-direction: column;
+align-items: center;
+font-size: 11px;
+color: #888;
+transition: .3s;
+position:relative;
+}
+
+.icon{
+width: 24px;
+height: 24px;
+fill: currentColor;
+margin-bottom:4px;
+}
+
+img.preview{
+width:100px;
+border-radius:12px;
+margin:10px 0
+}
+
+.totalVentaBox{
+font-size:20px;
+font-weight:700;
+color:#059669;
+margin-top:10px
 }
 
 canvas{
-width:100%!important;
-height:250px!important
+width:100% !important;
+height:300px !important
 }
 
+#instalarBtn{
+display:none;
+background:#059669
+}
 </style>
 </head>
 
 <body>
 
-<header>YOLUVAMI POS PROFESIONAL</header>
+<header>YOLUVAMI Sistema Profesional</header>
 
 <div class="container">
 
 <div class="card">
-
 <h3>Registrar Venta</h3>
 
-<input id="buscar" placeholder="Buscar producto">
+<input type="text" id="buscador" placeholder="Buscar producto...">
+<select id="productoSelect"></select>
+<img id="imgPreview" class="preview">
 
-<select id="producto"></select>
-
-<input type="number" id="cantidad" placeholder="Cantidad">
-
-<button onclick="agregar()">Agregar Producto</button>
+<input type="number" id="cantidad" placeholder="Cantidad" min="1">
+<button onclick="agregarVenta()">Agregar Producto</button>
 
 <table>
-
 <thead>
 <tr>
 <th>Producto</th>
@@ -133,323 +179,295 @@ height:250px!important
 <th></th>
 </tr>
 </thead>
-
-<tbody id="tabla"></tbody>
-
+<tbody id="tablaVenta"></tbody>
 </table>
 
-<div class="totalBox">
-Total C$ <span id="total">0</span>
+<div class="totalVentaBox">
+Total: C$<span id="totalVenta">0</span>
 </div>
 
-<button onclick="finalizar()">Finalizar Venta</button>
-
-</div>
-
-
-<div class="card">
-
-<h3>Dashboard de Ventas</h3>
-
-<div id="dashboard"></div>
-
-<canvas id="grafica"></canvas>
-
+<button onclick="finalizarVenta()">Finalizar Venta</button>
 </div>
 
 <div class="card">
-
-<h3>Historial</h3>
-
+<h3>Historial del Día</h3>
 <div id="historial"></div>
+</div>
 
+<div class="card">
+<h3>Resumen General</h3>
+<div id="resumen"></div>
+<button id="instalarBtn">📲 Instalar Aplicación</button>
 </div>
 
 </div>
 
+<div id="loginScreen" style="
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:#1e3a8a;
+display:flex;
+align-items:center;
+justify-content:center;
+z-index:9999;
+">
+
+<div style="
+background:white;
+padding:30px;
+border-radius:20px;
+width:90%;
+max-width:350px;
+text-align:center;
+box-shadow:0 10px 30px rgba(0,0,0,.2)
+">
+
+<h2 style="margin-bottom:20px"> Acceso</h2>
+
+<input type="text" id="usuario" placeholder="Usuario">
+
+<input type="password" id="clave" placeholder="Contraseña">
+
+<button onclick="login()">Ingresar</button>
+
+<p id="errorLogin" style="color:red;margin-top:10px"></p>
+
+</div>
+</div>
 
 <script>
 
-/* INVENTARIO PERMANENTE */
+/* PRODUCTOS CON STOCK */
+const productos=[
+{name:"Mobil Special 20W-50",price:1060,img:"30.jpeg",stock:10},
+{name:"CLEAN ALL",price:180,img:"cleanall.jpg",stock:5},
+{name:"Freezetone Radiator",price:230,img:"freezetone.jpg",stock:8},
+{name:"Flamingo Foam Cleaner",price:150,img:"flamingo.jpg",stock:3},
+{name:"Shell Advance AX5 20W-50",price:280,img:"shell.jpg",stock:6},
+{name:"Letrero Taxi LED",price:600,img:"taxi.jpg",stock:4},
+{name:"Forro para Timón",price:450,img:"timon.jpg",stock:7}
+];
 
-let inventario = JSON.parse(localStorage.getItem("inventarioYoluvami")) || [
+let ventaActual=[];
+let historial=JSON.parse(localStorage.getItem("ventasYoluvami"))||[];
 
-{name:"Mobil Special 20W-50",price:1060,stock:10,img:"30.jpeg",vendidos:0},
-{name:"CLEAN ALL",price:180,stock:5,img:"cleanall.jpg",vendidos:0},
-{name:"Freezetone Radiator",price:230,stock:8,img:"freezetone.jpg",vendidos:0},
-{name:"Flamingo Foam Cleaner",price:150,stock:3,img:"flamingo.jpg",vendidos:0},
-{name:"Shell Advance AX5 20W-50",price:280,stock:6,img:"shell.jpg",vendidos:0},
-{name:"Letrero Taxi LED",price:600,stock:4,img:"taxi.jpg",vendidos:0},
-{name:"Forro para Timón",price:450,stock:7,img:"timon.jpg",vendidos:0}
+const select=document.getElementById("productoSelect");
+const buscador=document.getElementById("buscador");
+const imgPreview=document.getElementById("imgPreview");
 
-]
+function cargarProductos(lista){
+select.innerHTML="";
+lista.forEach(p=>{
+select.innerHTML+=`<option value="${productos.indexOf(p)}">${p.name} - C$${p.price} (Stock: ${p.stock})</option>`;
+});
+mostrarImagen();
+}
+cargarProductos(productos);
 
-let historial = JSON.parse(localStorage.getItem("ventasYoluvami")) || []
+buscador.addEventListener("input",()=>{
+const texto=buscador.value.toLowerCase();
+cargarProductos(productos.filter(p=>p.name.toLowerCase().includes(texto)));
+});
 
-let ventaActual=[]
+function mostrarImagen(){
+if(productos[select.value]){
+imgPreview.src=productos[select.value].img;
+}
+}
+select.addEventListener("change",mostrarImagen);
 
-const select=document.getElementById("producto")
+function agregarVenta(){
+const index=select.value;
+const cantidad=parseInt(document.getElementById("cantidad").value);
+if(!cantidad||cantidad<=0)return alert("Cantidad inválida");
 
-function cargarProductos(){
+const producto=productos[index];
 
-select.innerHTML=""
-
-inventario.forEach((p,i)=>{
-
-select.innerHTML+=`<option value="${i}">${p.name} - C$${p.price} (Stock ${p.stock})</option>`
-
-})
-
+if(producto.stock < cantidad){
+return alert("Stock insuficiente");
 }
 
-cargarProductos()
+producto.stock -= cantidad;
 
-
-/* AGREGAR PRODUCTO */
-
-function agregar(){
-
-let i=select.value
-let cantidad=parseInt(document.getElementById("cantidad").value)
-
-if(!cantidad)return
-
-let p=inventario[i]
-
-if(p.stock<cantidad){
-
-alert("Producto agotado")
-
-return
-
+const subtotal=producto.price*cantidad;
+ventaActual.push({...producto,cantidad,subtotal});
+actualizarTabla();
+document.getElementById("cantidad").value="";
+cargarProductos(productos);
 }
 
-p.stock-=cantidad
-p.vendidos+=cantidad
-
-let subtotal=p.price*cantidad
-
-ventaActual.push({...p,cantidad,subtotal})
-
-guardarInventario()
-
-renderVenta()
-
-}
-
-
-/* GUARDAR INVENTARIO */
-
-function guardarInventario(){
-
-localStorage.setItem("inventarioYoluvami",JSON.stringify(inventario))
-
-}
-
-
-/* TABLA VENTA */
-
-function renderVenta(){
-
-let tabla=document.getElementById("tabla")
-
-tabla.innerHTML=""
-
-let total=0
+function actualizarTabla(){
+let total=0;
+const tbody=document.getElementById("tablaVenta");
+tbody.innerHTML="";
 
 ventaActual.forEach((p,i)=>{
-
-total+=p.subtotal
-
-tabla.innerHTML+=`
-
+total+=p.subtotal;
+tbody.innerHTML+=`
 <tr>
-
 <td class="product-row">
-
 <img src="${p.img}">
 ${p.name}
-
 </td>
-
 <td>${p.cantidad}</td>
-
 <td>C$${p.subtotal}</td>
+<td><button class="deleteBtn" onclick="eliminar(${i})">X</button></td>
+</tr>`;
+});
 
-<td><button class="deleteBtn" onclick="borrar(${i})">X</button></td>
-
-</tr>
-
-`
-
-})
-
-document.getElementById("total").innerText=total
-
+document.getElementById("totalVenta").innerText=total;
 }
 
-
-/* ELIMINAR */
-
-function borrar(i){
-
-ventaActual.splice(i,1)
-
-renderVenta()
-
+function eliminar(i){
+ventaActual.splice(i,1);
+actualizarTabla();
 }
 
+function finalizarVenta(){
+if(ventaActual.length===0)return alert("No hay productos");
 
-/* FINALIZAR VENTA */
+const fecha=new Date();
+const total=ventaActual.reduce((acc,p)=>acc+p.subtotal,0);
 
-function finalizar(){
-
-if(ventaActual.length==0)return
-
-let total=ventaActual.reduce((a,b)=>a+b.subtotal,0)
-
-let venta={
-
-fecha:new Date().toLocaleString(),
+historial.push({
+fecha:fecha.toLocaleDateString(),
+hora:fecha.toLocaleTimeString(),
 productos:ventaActual,
 total
+});
 
+localStorage.setItem("ventasYoluvami",JSON.stringify(historial));
+ventaActual=[];
+actualizarTabla();
+mostrarHistorial();
 }
-
-historial.push(venta)
-
-localStorage.setItem("ventasYoluvami",JSON.stringify(historial))
-
-generarFactura(venta)
-
-ventaActual=[]
-
-renderVenta()
-
-mostrarHistorial()
-
-cargarProductos()
-
-}
-
-
-/* FACTURA AUTOMATICA */
-
-async function generarFactura(v){
-
-const {jsPDF}=window.jspdf
-
-let doc=new jsPDF()
-
-doc.text("Factura YOLUVAMI",70,20)
-
-let y=40
-
-v.productos.forEach(p=>{
-
-doc.text(`${p.name} x${p.cantidad} C$${p.subtotal}`,10,y)
-
-y+=10
-
-})
-
-doc.text(`Total: C$${v.total}`,10,y+10)
-
-doc.save("Factura_YOLUVAMI.pdf")
-
-}
-
-
-/* HISTORIAL */
 
 function mostrarHistorial(){
+const div=document.getElementById("historial");
+div.innerHTML="";
+let ingresos=0;
 
-let div=document.getElementById("historial")
-
-div.innerHTML=""
-
-let ingresos=0
-
-historial.forEach(v=>{
-
-ingresos+=v.total
+historial.forEach((v,index)=>{
+ingresos+=v.total;
 
 div.innerHTML+=`
+<div style="background:#f9fafc;padding:15px;border-radius:12px;margin-bottom:12px">
+<div><strong>${v.fecha} - ${v.hora}</strong></div>
+<p>Total: C$${v.total}</p>
+<button class="deleteBtn" onclick="borrarRegistro(${index})">Eliminar</button>
+</div>`;
+});
 
-<div class="card">
+let alertaStock="";
+productos.forEach(p=>{
+if(p.stock<=3){
+alertaStock+=`⚠ ${p.name} stock bajo (${p.stock})<br>`;
+}
+});
 
-${v.fecha}
+document.getElementById("resumen").innerHTML=`
+<p><strong>Total Ingresos:</strong> C$${ingresos}</p>
+<canvas id="grafica"></canvas>
+<button onclick="exportarExcel()">Descargar Excel</button>
+<button onclick="generarPDF()">Descargar PDF</button>
+<button onclick="enviarWhatsApp()">Enviar WhatsApp</button>
+<div style="margin-top:15px;color:#dc2626;font-weight:600">${alertaStock}</div>
+`;
 
-<br>
-
-Total C$${v.total}
-
-</div>
-
-`
-
-})
-
-crearDashboard(ingresos)
-
+crearGrafica();
 }
 
-
-/* DASHBOARD */
-
-function crearDashboard(ingresos){
-
-let vendidos=inventario.sort((a,b)=>b.vendidos-a.vendidos)
-
-let top=vendidos[0]
-
-document.getElementById("dashboard").innerHTML=`
-
-Total Ingresos: <b>C$${ingresos}</b>
-
-<br><br>
-
-Producto más vendido:
-
-<b>${top.name}</b> (${top.vendidos})
-
-${top.stock<=2?'<div class="alerta">⚠ Producto casi agotado</div>':''}
-
-`
-
-crearGrafica()
-
+function borrarRegistro(i){
+if(confirm("¿Eliminar registro?")){
+historial.splice(i,1);
+localStorage.setItem("ventasYoluvami",JSON.stringify(historial));
+mostrarHistorial();
+}
 }
 
-
-/* GRAFICA */
+let graficaActual=null;
 
 function crearGrafica(){
+const ctx=document.getElementById("grafica");
+if(!ctx)return;
+if(graficaActual)graficaActual.destroy();
 
-let ctx=document.getElementById("grafica")
+const meses={};
 
-let labels=inventario.map(p=>p.name)
+historial.forEach(v=>{
+let mes=v.fecha.split("/")[1];
+meses[mes]=(meses[mes]||0)+v.total;
+});
 
-let data=inventario.map(p=>p.vendidos)
-
-new Chart(ctx,{
-
+graficaActual=new Chart(ctx,{
 type:"bar",
-
 data:{
-labels:labels,
+labels:Object.keys(meses),
 datasets:[{
-label:"Productos vendidos",
-data:data
+label:"Ingresos por Mes",
+data:Object.values(meses)
 }]
+},
+options:{responsive:true,maintainAspectRatio:false}
+});
 }
 
-})
-
+function exportarExcel(){
+const wb=XLSX.utils.book_new();
+const ws=XLSX.utils.json_to_sheet(historial);
+XLSX.utils.book_append_sheet(wb,ws,"Ventas");
+XLSX.writeFile(wb,"Ventas_YOLUVAMI.xlsx");
 }
 
+async function generarPDF(){
+const { jsPDF }=window.jspdf;
+const doc=new jsPDF();
+let y=20;
+doc.setFontSize(16);
+doc.text("YOLUVAMI Reporte",70,y);
+y+=15;
 
-mostrarHistorial()
+let totalGeneral=0;
+
+historial.forEach(v=>{
+doc.text(`${v.fecha} ${v.hora} - C$${v.total}`,10,y);
+y+=8;
+totalGeneral+=v.total;
+});
+
+doc.text(`TOTAL GENERAL: C$${totalGeneral}`,10,y+10);
+doc.save("Factura_YOLUVAMI.pdf");
+}
+
+function enviarWhatsApp(){
+let mensaje="📊 Resumen YOLUVAMI\n";
+let total=0;
+historial.forEach(v=>{
+mensaje+=`${v.fecha} ${v.hora} - C$${v.total}\n`;
+total+=v.total;
+});
+mensaje+=`\nTotal General: C$${total}`;
+window.open(`https://wa.me/?text=${encodeURIComponent(mensaje)}`);
+}
+
+mostrarHistorial();
+
+/* LOGIN SISTEMA */
+function login(){
+
+const user=document.getElementById("usuario").value;
+const pass=document.getElementById("clave").value;
+
+if(user==="Michell03" && pass==="yoluvami2026"){
+document.getElementById("loginScreen").style.display="none";
+}else{
+document.getElementById("errorLogin").innerText="Usuario o contraseña incorrectos";
+}
+
+}
 
 </script>
 
