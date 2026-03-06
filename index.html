@@ -852,7 +852,6 @@ function actualizarEstado() {
 // Actualizar cada minuto y al inicio
 actualizarEstado();
 setInterval(actualizarEstado, 60000);
-
 /* ===================== */
 /* PWA INSTALAR APP       */
 /* ===================== */
@@ -867,19 +866,18 @@ if ('serviceWorker' in navigator) {
 let deferredPrompt;
 const btnInstalar = document.getElementById('instalarBtn');
 
-// Aseguramos que el botón exista en la página
 if (btnInstalar) {
-  btnInstalar.style.display = 'none';
+  btnInstalar.style.display = 'none'; // oculto por defecto
 
-  // Evento antes de instalar la PWA
+  // Evento antes de instalar
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault(); // evita el prompt automático
     deferredPrompt = e;
     console.log('PWA instalable: evento beforeinstallprompt disparado ✅');
-    btnInstalar.style.display = 'block'; // mostramos el botón
+    btnInstalar.style.display = 'block'; // mostramos botón
   });
 
-  // Click en el botón para instalar
+  // Click en botón
   btnInstalar.addEventListener('click', async () => {
     if (deferredPrompt) {
       deferredPrompt.prompt(); // muestra el prompt
@@ -896,7 +894,7 @@ if (btnInstalar) {
   });
 }
 
-// Evento opcional para detectar cuando la app ya está instalada
+// Detecta si la app ya está instalada
 window.addEventListener('appinstalled', () => {
   console.log('PWA ya instalada 🎉');
   if (btnInstalar) btnInstalar.style.display = 'none';
