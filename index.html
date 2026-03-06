@@ -339,30 +339,7 @@ line-height:1.5;
   fill: currentColor;
   margin-bottom: 2px;
 }
-#instalarBtn {
-  position: fixed;
-  right: 18px;
-  bottom: 320px; /* arriba del carrito y delivery */
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background: #065f46; /* verde oscuro */
-  color: #fff;
-  font-size: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-  border: none;
-  cursor: pointer;
-  z-index: 1500;
-  transition: 0.3s;
-}
 
-#instalarBtn:hover {
-  background: #087f5b; /* verde más brillante */
-  transform: scale(1.1);
-}
 .icon{
   width: 24px;
   height: 24px;
@@ -418,7 +395,8 @@ line-height:1.5;
 <p>Somoto · Madriz · Nicaragua 🇳🇮</p>
 <p>Lubricantes · Grasas · Aceites</p>
 <button class="infoBtn" onclick="openInfo()">Ver Información</button>
-<button id="instalarBtn">Instalar App</button>
+<button id="instalarBtn" style="display:none">📲 Instalar Aplicación</button>
+
 </div>
 
 <div class="filtros">
@@ -869,41 +847,15 @@ function actualizarEstado(){
   }
 }
 
+/* PWA INSTALAR APP */
+if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js")})}
+let deferredPrompt
+const btnInstalar=document.getElementById("instalarBtn")
+if(btnInstalar){btnInstalar.style.display="none";window.addEventListener("beforeinstallprompt",(e)=>{e.preventDefault();deferredPrompt=e;btnInstalar.style.display="block"});btnInstalar.addEventListener("click",async()=>{if(deferredPrompt){deferredPrompt.prompt();const resultado=await deferredPrompt.userChoice;if(resultado.outcome==="accepted") btnInstalar.style.display="none";deferredPrompt=null}})}
+
 setInterval(actualizarEstado,60000);
 actualizarEstado();
-let deferredPrompt;
-const btnInstalar = document.getElementById('instalarBtn');
 
-// Detectar si la PWA puede ser instalada
-window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault();
-  deferredPrompt = e;
-  btnInstalar.style.display = 'inline-block'; // mostrar botón
-});
-
-// Cuando el usuario hace click en instalar
-btnInstalar.addEventListener('click', async () => {
-  if(deferredPrompt){
-    deferredPrompt.prompt(); // mostrar diálogo de instalación
-    const { outcome } = await deferredPrompt.userChoice;
-    if(outcome === 'accepted'){
-      console.log('Usuario aceptó instalar la app ✅');
-    } else {
-      console.log('Usuario rechazó instalar la app ❌');
-    }
-    deferredPrompt = null;
-    btnInstalar.style.display = 'none'; // ocultar botón después
-  }
-});
-
-// Registrar el Service Worker
-if('serviceWorker' in navigator){
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js')
-      .then(() => console.log('Service Worker registrado ✅'))
-      .catch(err => console.log('Error SW:', err));
-  });
-}
 /* FILTROS */
 categoriaFiltro.addEventListener("change",mostrarProductos);
 precioMin.addEventListener("input",mostrarProductos);
