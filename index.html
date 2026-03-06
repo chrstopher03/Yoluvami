@@ -395,8 +395,7 @@ line-height:1.5;
 <p>Somoto · Madriz · Nicaragua 🇳🇮</p>
 <p>Lubricantes · Grasas · Aceites</p>
 <button class="infoBtn" onclick="openInfo()">Ver Información</button>
-<button id="instalarBtn" style="display:none">📲 Instalar Aplicación</button>
-
+<button id="instalarBtn">Instalar App</button>
 </div>
 
 <div class="filtros">
@@ -518,20 +517,6 @@ Productos confiables y de alta calidad.
 
     <button class="modalBtn" onclick="cerrarPromo()">Entendido</button>
   
-  </div>
-</div>
-<!-- MODAL INSTALACIÓN APP -->
-<div class="modal" id="installModal">
-  <div class="modalContent" style="max-width:400px;text-align:center;padding:25px;">
-    <div style="display:flex;justify-content:center;align-items:center;margin-bottom:15px;">
-      <img src="23.jpeg" alt="YOLUVAMI" style="width:90px;height:90px;object-fit:contain;border-radius:20px;">
-    </div>
-    <h3 style="margin:5px 0;">Instala YOLUVAMI</h3>
-    <p style="font-size:13px;color:#555;margin-bottom:18px;line-height:1.5;">
-      Añade YOLUVAMI a tu dispositivo para acceder más rápido y disfrutar de una experiencia tipo app.
-    </p>
-    <button class="modalBtn" id="installAppBtn">Instalar ahora</button>
-    <button class="modalBtn" style="background:#e5e7eb;color:#111;margin-top:8px;" onclick="closeInstall()">Más tarde</button>
   </div>
 </div>
 <div id="deliveryBtn" onclick="abrirDelivery()" 
@@ -731,7 +716,6 @@ function agregarDesdeModal(){
 function irCarrito(){
   window.location.href = "carritoYoluvami.html";
 }
-
 /* MODAL INFO */
 function openInfo(){
   document.getElementById("infoModal").style.display = "flex";
@@ -751,7 +735,6 @@ function contactarDelivery(){
   const texto = "Hola 👋, quiero solicitar el servicio de delivery para mi pedido en Somoto.";
   window.open(`https://wa.me/50583320030?text=${encodeURIComponent(texto)}`, '_blank');
 }
-
 /* ===================== */
 /* PRODUCTOS */
 /* ===================== */
@@ -830,10 +813,8 @@ function seguirAhora(){
 /* ===================== */
 /* HORARIO NICARAGUA */
 /* ===================== */
-/* ===================== */
-/* ESTADO DEL NEGOCIO (HORARIO NICARAGUA) */
-/* ===================== */
-function actualizarEstado() {
+
+function actualizarEstado(){
   const ahora = new Date();
   const opciones = { timeZone: 'America/Managua', hour12: false };
   const horaNica = new Date(ahora.toLocaleString('en-US', opciones));
@@ -842,89 +823,69 @@ function actualizarEstado() {
   const minutos = horaNica.getMinutes();
   const totalMinutos = hora * 60 + minutos;
 
-  const apertura = 8 * 60 + 30; // 8:30 AM
-  const cierre = 16 * 60;       // 4:00 PM
+  const apertura = 8 * 60 + 30;
+  const cierre = 16 * 60;
 
-  let faltan, h, m;
-
-  if (totalMinutos >= apertura && totalMinutos < cierre) {
-    // Abierto
-    faltan = cierre - totalMinutos;
-    h = Math.floor(faltan / 60);
-    m = faltan % 60;
+  if(totalMinutos >= apertura && totalMinutos < cierre){
+    const faltan = cierre - totalMinutos;
+    const h = Math.floor(faltan / 60);
+    const m = faltan % 60;
     statusElement.innerHTML = `🟢 Abierto · Cierra en ${h}h ${m}m`;
     statusElement.className = "status abierto";
-  } else {
-    // Cerrado
-    faltan = totalMinutos < apertura
-      ? apertura - totalMinutos
-      : (24 * 60 - totalMinutos) + apertura;
-    h = Math.floor(faltan / 60);
-    m = faltan % 60;
+  }else{
+    let faltan;
+    if(totalMinutos < apertura){
+      faltan = apertura - totalMinutos;
+    }else{
+      faltan = (24 * 60 - totalMinutos) + apertura;
+    }
+    const h = Math.floor(faltan / 60);
+    const m = faltan % 60;
     statusElement.innerHTML = `🔴 Cerrado · Abre en ${h}h ${m}m`;
     statusElement.className = "status cerrado";
   }
 }
 
-// Actualizar cada minuto y al inicio
+setInterval(actualizarEstado,60000);
 actualizarEstado();
-setInterval(actualizarEstado, 60000);/* ===================== */
-/* PWA INSTALAR APP MODAL */
-/* ===================== */
-if ('serviceWorker' in navigator) {
+let deferredPrompt;
+const btnInstalar = document.getElementById('instalarBtn');
+
+// Detectar si la PWA puede ser instalada
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  btnInstalar.style.display = 'inline-block'; // mostrar botón
+});
+
+// Cuando el usuario hace click en instalar
+btnInstalar.addEventListener('click', async () => {
+  if(deferredPrompt){
+    deferredPrompt.prompt(); // mostrar diálogo de instalación
+    const { outcome } = await deferredPrompt.userChoice;
+    if(outcome === 'accepted'){
+      console.log('Usuario aceptó instalar la app ✅');
+    } else {
+      console.log('Usuario rechazó instalar la app ❌');
+    }
+    deferredPrompt = null;
+    btnInstalar.style.display = 'none'; // ocultar botón después
+  }
+});
+
+// Registrar el Service Worker
+if('serviceWorker' in navigator){
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('sw.js')
       .then(() => console.log('Service Worker registrado ✅'))
       .catch(err => console.log('Error SW:', err));
   });
 }
+/* FILTROS */
+categoriaFiltro.addEventListener("change",mostrarProductos);
+precioMin.addEventListener("input",mostrarProductos);
+precioMax.addEventListener("input",mostrarProductos);
 
-let deferredPrompt;
-
-// Antes de instalar
-window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault(); // evita prompt automático
-  deferredPrompt = e;
-  console.log('PWA instalable: evento beforeinstallprompt disparado ✅');
-
-  // Mostrar modal personalizado
-  document.getElementById('installModal').style.display = 'flex';
-});
-
-// Botón "Instalar ahora" del modal
-const btnInstallModal = document.getElementById('installAppBtn');
-btnInstallModal.addEventListener('click', async () => {
-  if (deferredPrompt) {
-    deferredPrompt.prompt(); // prompt oficial
-    const { outcome } = await deferredPrompt.userChoice;
-    console.log('Resultado instalación:', outcome);
-    deferredPrompt = null;
-    document.getElementById('installModal').style.display = 'none';
-  }
-});
-
-// Botón "Más tarde"
-function closeInstall() {
-  document.getElementById('installModal').style.display = 'none';
-}
-window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault();
-  deferredPrompt = e;
-  document.getElementById('installModal').style.display = 'flex'; // muestra tu modal
-});
-// Detecta si la app ya está instalada
-window.addEventListener('appinstalled', () => {
-  console.log('PWA ya instalada 🎉');
-  document.getElementById('installModal').style.display = 'none';
-});
-/* ===================== */
-/* FILTROS DE PRODUCTOS */
-/* ===================== */
-categoriaFiltro.addEventListener('change', mostrarProductos);
-precioMin.addEventListener('input', mostrarProductos);
-precioMax.addEventListener('input', mostrarProductos);
-
-/* Mostrar productos al cargar */
 mostrarProductos();
 </script>
 
