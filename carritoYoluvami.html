@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Carrito | YOLUVAMI</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+--primary:#1e3a8a;
+--primary-light:#3b82f6;
+--bg:#f3f4f6;
+--text:#111827;
+--danger:#dc2626;
+}
+
+*{box-sizing:border-box;}
+
+body{
+margin:0;
+font-family:'Poppins',sans-serif;
+background:var(--bg);
+padding-bottom:120px;
+}
+
+header{
+background:#fff;
+padding:18px;
+text-align:center;
+font-weight:700;
+font-size:18px;
+box-shadow:0 4px 20px rgba(0,0,0,.06);
+}
+
+.container{
+padding:20px;
+max-width:600px;
+margin:auto;
+}
+
+.cart-item{
+background:#fff;
+border-radius:20px;
+padding:15px;
+display:flex;
+gap:15px;
+align-items:center;
+margin-bottom:18px;
+box-shadow:0 6px 18px rgba(0,0,0,.06);
+}
+
+.cart-item img{
+width:90px;
+height:90px;
+object-fit:contain;
+border-radius:15px;
+background:#fff;
+}
+
+/* ====== BARRA INFERIOR FIJA ABAJO ====== */
+.bottomNav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: #1e3a8a;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 6px 0;
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
+  z-index: 999;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+}
+.bottomNav .navItem {
+  text-decoration: none;
+  color: #cbd5e1;
+  font-size: 11px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  transition: 0.3s;
+}
+.bottomNav .navItem.active,
+.bottomNav .navItem:hover {
+  color: #fff;
+}
+.bottomNav .navItem .icon {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+  margin-bottom: 2px;
+}
+.icon{
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+  margin-bottom:4px;
+}
+
+/* ACTIVO */
+.navItem.active{
+  color: #355e3b;
+  font-weight:600;
+}
+
+.navItem.active::before{
+  content:"";
+  position:absolute;
+  top:-8px;
+  width:30px;
+  height:4px;
+  background:#355e3b;
+  border-radius:10px;
+}
+.item-info{flex:1;}
+
+.item-info h4{
+margin:0;
+font-size:15px;
+font-weight:600;
+}
+
+.item-info p{
+margin:8px 0 0;
+font-weight:700;
+color:var(--primary);
+}
+
+.remove-btn{
+background:var(--danger);
+color:#fff;
+border:none;
+border-radius:10px;
+padding:8px 12px;
+cursor:pointer;
+font-size:12px;
+}
+
+.total{
+background:#fff;
+padding:18px;
+border-radius:20px;
+font-weight:700;
+font-size:18px;
+box-shadow:0 6px 18px rgba(0,0,0,.06);
+margin-top:25px;
+text-align:center;
+}
+
+.actions{
+margin-top:25px;
+display:flex;
+flex-direction:column;
+gap:12px;
+}
+
+.btn{
+padding:14px;
+border:none;
+border-radius:15px;
+font-weight:600;
+cursor:pointer;
+font-size:14px;
+}
+
+.pagar{
+background:linear-gradient(135deg,var(--primary),var(--primary-light));
+color:#fff;
+}
+
+.vaciar{background:#e5e7eb;}
+.regresar{background:#111827;color:#fff;}
+
+.empty{
+text-align:center;
+padding:40px 0;
+color:#6b7280;
+}
+</style>
+</head>
+
+<body>
+
+<header>Carrito YOLUVAMI</header>
+
+<div class="container">
+<div id="cartItems"></div>
+<div id="cartTotal" class="total"></div>
+
+<div class="actions">
+<button class="btn pagar" onclick="procesarPedido()">Proceder al pedido</button>
+<button class="btn vaciar" onclick="vaciarCarrito()">Vaciar carrito</button>
+<button class="btn regresar" onclick="volver()">Regresar</button>
+</div>
+</div>
+<!-- BARRA INFERIOR -->
+
+<nav class="bottomNav">
+  <a href="index.html" class="navItem active">
+    <svg viewBox="0 0 24 24" class="icon">
+      <path d="M3 12l9-9 9 9v9a2 2 0 0 1-2 2h-4v-6H9v6H5a2 2 0 0 1-2-2z"/>
+    </svg>
+    <small>Inicio</small>
+  </a>
+
+  <a href="carritoYoluvami.html" class="navItem">
+    <svg viewBox="0 0 24 24" class="icon">
+      <path d="M6 6h15l-1.5 9h-13L6 6zm0 0l-2-4H1"/>
+    </svg>
+    <small>Carrito</small>
+  </a>
+
+  <a href="registroYoluvami.html" class="navItem">
+    <svg viewBox="0 0 24 24" class="icon">
+      <path d="M3 3h18v2H3V3zm0 4h18v2H3V7zm0 4h12v2H3v-2zm0 4h8v2H3v-2z"/>
+    </svg>
+    <small>Ventas</small>
+  </a>
+</nav>
+
+<script>
+
+let cart = JSON.parse(localStorage.getItem("cart")) || [];
+const cartItems = document.getElementById("cartItems");
+const cartTotal = document.getElementById("cartTotal");
+
+const numeroWhatsApp = "50583320030";
+
+function renderCart(){
+cartItems.innerHTML="";
+let total=0;
+
+if(cart.length===0){
+cartItems.innerHTML=`<div class="empty">Tu carrito está vacío 🛍️</div>`;
+cartTotal.innerHTML="";
+return;
+}
+
+cart.forEach((item,index)=>{
+total+=item.price;
+
+cartItems.innerHTML+=`
+<div class="cart-item">
+<img src="${item.img}">
+<div class="item-info">
+<h4>${item.name}</h4>
+<p>C$${item.price}</p>
+</div>
+<button class="remove-btn" onclick="removeItem(${index})">Eliminar</button>
+</div>
+`;
+});
+
+cartTotal.innerHTML="Total a pagar: C$"+total;
+}
+
+function removeItem(index){
+cart.splice(index,1);
+localStorage.setItem("cart",JSON.stringify(cart));
+renderCart();
+}
+
+function vaciarCarrito(){
+localStorage.removeItem("cart");
+cart=[];
+renderCart();
+}
+
+function volver(){
+window.location.href="yoluvami.html";
+}
+
+async function procesarPedido(){
+
+if(cart.length===0){
+alert("Tu carrito está vacío 🛒");
+return;
+}
+
+let total=0;
+let numeroOrden="ORD-"+Date.now();
+
+let canvas=document.createElement("canvas");
+canvas.width=800;
+canvas.height=1000;
+let ctx=canvas.getContext("2d");
+
+// Fondo
+ctx.fillStyle="#ffffff";
+ctx.fillRect(0,0,800,1000);
+
+// Encabezado
+ctx.fillStyle="#1e3a8a";
+ctx.font="bold 40px Poppins";
+ctx.fillText("YOLUVAMI AUTOPARTES",80,80);
+
+ctx.fillStyle="#000";
+ctx.font="20px Poppins";
+ctx.fillText("Factura de Compra",80,120);
+ctx.fillText("Orden: "+numeroOrden,80,160);
+ctx.fillText("Fecha: "+new Date().toLocaleDateString(),500,160);
+
+let y=220;
+
+for(let item of cart){
+
+ctx.font="bold 22px Poppins";
+ctx.fillText(item.name,80,y);
+
+ctx.font="20px Poppins";
+ctx.fillText("C$"+item.price,600,y);
+
+total+=item.price;
+y+=40;
+
+}
+
+y+=40;
+
+ctx.fillStyle="#1e3a8a";
+ctx.font="bold 28px Poppins";
+ctx.fillText("TOTAL: C$"+total,500,y);
+
+y+=60;
+
+ctx.fillStyle="#000";
+ctx.font="18px Poppins";
+ctx.fillText("Gracias por confiar en YOLUVAMI 🙌",200,y);
+
+// Descargar imagen
+let link=document.createElement("a");
+link.download="Factura_YOLUVAMI_"+numeroOrden+".png";
+link.href=canvas.toDataURL();
+link.click();
+
+// WhatsApp
+let mensaje="🛒 *Nuevo Pedido YOLUVAMI* %0A%0A";
+cart.forEach(p=>{
+mensaje+="• "+p.name+" - C$"+p.price+"%0A";
+});
+mensaje+="%0A💰 *Total: C$"+total+"*";
+
+let url=`https://wa.me/${numeroWhatsApp}?text=${mensaje}`;
+window.open(url,"_blank");
+
+}
+
+renderCart();
+
+</script>
+
+</body>
+</html>

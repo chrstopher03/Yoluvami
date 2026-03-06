@@ -1,643 +1,288 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-
 <meta charset="UTF-8">
-<title>YOLUVAMI Sistema Pro</title>
+<title>YOLUVAMI</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#1e3a8a">
-
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
 <style>
-
-body{
-margin:0;
-font-family:Poppins;
-background:#f3f4f6
+body{margin:0;font-family:Poppins;background:#f3f4f6}
+header{background:#1e3a8a;color:white;padding:18px;text-align:center;font-size:18px;font-weight:700}
+.container{padding:15px;max-width:600px;margin:auto}
+.card{background:white;padding:18px;border-radius:20px;margin-bottom:20px;box-shadow:0 10px 25px rgba(0,0,0,.08)}
+input, select, button{width:100%;padding:12px;border-radius:12px;border:1px solid #ddd;margin:10px 0;font-size:14px;box-sizing:border-box;display:block;}
+button{background:linear-gradient(135deg,#1e3a8a,#2563eb);color:white;border:none;font-weight:600;cursor:pointer}
+button:active{transform:scale(.97)}
+.deleteBtn{background:#dc2626}
+.logoutBtn{background:#111}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:8px;border-bottom:1px solid #eee}
+.product-row{display:flex;align-items:center;gap:10px}
+.product-row img{width:40px;border-radius:8px}
+img.preview{width:100px;border-radius:12px;margin:10px 0}
+.totalVentaBox{font-size:20px;font-weight:700;color:#059669;margin-top:10px}
+canvas{width:100%!important;height:300px!important}
+.bottomNav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: #1e3a8a;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 6px 0;
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
+  z-index: 999;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
 }
-
-header{
-background:#1e3a8a;
-color:white;
-padding:18px;
-text-align:center;
-font-size:18px;
-font-weight:700
+.bottomNav .navItem {
+  text-decoration: none;
+  color: #cbd5e1;
+  font-size: 11px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  transition: 0.3s;
 }
-
-.container{
-padding:15px;
-max-width:600px;
-margin:auto
+.bottomNav .navItem.active,
+.bottomNav .navItem:hover {
+  color: #fff;
 }
-
-.card{
-background:white;
-padding:18px;
-border-radius:20px;
-margin-bottom:20px;
-box-shadow:0 10px 25px rgba(0,0,0,.08)
+.bottomNav .navItem .icon {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+  margin-bottom: 2px;
 }
-
-input, select, button{
-width:100%;
-padding:12px;
-border-radius:12px;
-border:1px solid #ddd;
-margin:10px 0;
-font-size:14px;
-box-sizing:border-box;
-display:block;
-}
-button{
-background:linear-gradient(135deg,#1e3a8a,#2563eb);
-color:white;
-border:none;
-font-weight:600;
-cursor:pointer
-}
-
-button:active{
-transform:scale(.97)
-}
-
-.deleteBtn{
-background:#dc2626
-}
-
-.logoutBtn{
-background:#111
-}
-
-table{
-width:100%;
-border-collapse:collapse;
-font-size:13px
-}
-
-th,td{
-padding:8px;
-border-bottom:1px solid #eee
-}
-
-.product-row{
-display:flex;
-align-items:center;
-gap:10px
-}
-
-.product-row img{
-width:40px;
-border-radius:8px
-}
-
-img.preview{
-width:100px;
-border-radius:12px;
-margin:10px 0
-}
-
-.totalVentaBox{
-font-size:20px;
-font-weight:700;
-color:#059669;
-margin-top:10px
-}
-
-canvas{
-width:100%!important;
-height:300px!important
-}
-
 /* LOGIN */
-#loginScreen{
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:#1e3a8a;
-display:flex;
-align-items:center;
-justify-content:center;
-z-index:9999;
-padding:20px; /* espacio lateral para móvil */
-box-sizing:border-box;
-}
-
-.loginBox{
-background:white;
-padding:30px;
-border-radius:20px;
-width:100%;
-max-width:340px;
-text-align:center;
-margin:auto;
-box-shadow:0 15px 40px rgba(0,0,0,.2);
-}
-
+#loginScreen{position:fixed;top:0;left:0;width:100%;height:100%;background:#1e3a8a;display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;box-sizing:border-box;}
+.loginBox{background:white;padding:30px;border-radius:20px;width:100%;max-width:340px;text-align:center;margin:auto;box-shadow:0 15px 40px rgba(0,0,0,.2);}
 </style>
-
 </head>
-
 <body>
 
 <div id="loginScreen">
-
 <div class="loginBox">
-
 <h2>Acceso</h2>
-
 <input type="text" id="usuario" placeholder="Usuario">
 <input type="password" id="clave" placeholder="Contraseña">
-
 <button onclick="login()">Ingresar</button>
-
 <p id="errorLogin" style="color:red"></p>
-
 </div>
-
 </div>
 
 <header>
-
 YOLUVAMI
-
-<div style="font-size:13px;margin-top:5px">
-Usuario: <span id="usuarioActivo"></span>
-</div>
-
-<button id="instalarBtn">📲 Instalar Aplicación</button>
+<div style="font-size:13px;margin-top:5px">Usuario: <span id="usuarioActivo"></span></div>
+<button id="instalarBtn" style="display:none">📲 Instalar Aplicación</button>
 <button class="logoutBtn" onclick="logout()">Cerrar sesión</button>
-
 </header>
 
 <div class="container">
 
 <div class="card">
-
 <h3>Registrar Venta</h3>
-
 <input type="text" id="buscador" placeholder="Buscar producto...">
-
 <select id="productoSelect"></select>
-
 <img id="imgPreview" class="preview">
-
 <input type="number" id="cantidad" placeholder="Cantidad" min="1">
-
 <button onclick="agregarVenta()">Agregar Producto</button>
-
 <table>
-
 <thead>
-<tr>
-<th>Producto</th>
-<th>Cant</th>
-<th>Subtotal</th>
-<th></th>
-</tr>
+<tr><th>Producto</th><th>Cant</th><th>Subtotal</th><th></th></tr>
 </thead>
-
 <tbody id="tablaVenta"></tbody>
-
 </table>
-
-<div class="totalVentaBox">
-Total: C$<span id="totalVenta">0</span>
-</div>
-
+<div class="totalVentaBox">Total: C$<span id="totalVenta">0</span></div>
 <button onclick="finalizarVenta()">Finalizar Venta</button>
+</div>
 
+<!-- PANEL AGREGAR STOCK -->
+<div class="card">
+<h3>💡 Agregar Stock</h3>
+<select id="productoStock"></select>
+<input type="number" id="cantidadStock" placeholder="Cantidad a agregar">
+<button onclick="agregarStock()">Actualizar Stock</button>
 </div>
 
 <div class="card">
-
 <h3>Historial del Día</h3>
-
 <div id="historial"></div>
-
 </div>
 
 <div class="card">
-
 <h3>Resumen General</h3>
-
 <div id="resumen"></div>
-
 </div>
 
+<div class="card">
+<h3>⚠ Productos Agotados</h3>
+<div id="agotados"></div>
 </div>
+<nav class="bottomNav">
+  <a href="index.html" class="navItem active">
+    <svg viewBox="0 0 24 24" class="icon">
+      <path d="M3 12l9-9 9 9v9a2 2 0 0 1-2 2h-4v-6H9v6H5a2 2 0 0 1-2-2z"/>
+    </svg>
+    <small>Inicio</small>
+  </a>
 
+  <a href="carrito.html" class="navItem">
+    <svg viewBox="0 0 24 24" class="icon">
+      <path d="M6 6h15l-1.5 9h-13L6 6zm0 0l-2-4H1"/>
+    </svg>
+    <small>Carrito</small>
+  </a>
+
+  <a href="registro_ventas.html" class="navItem">
+    <svg viewBox="0 0 24 24" class="icon">
+      <path d="M3 3h18v2H3V3zm0 4h18v2H3V7zm0 4h12v2H3v-2zm0 4h8v2H3v-2z"/>
+    </svg>
+    <small>Ventas</small>
+  </a>
+</nav>
 <script>
+/* ALERTAS BONITAS */
+function alerta(msg,color="#2563eb"){const div=document.createElement("div");div.innerText=msg;div.style.position="fixed";div.style.bottom="20px";div.style.right="20px";div.style.background=color;div.style.color="white";div.style.padding="12px 18px";div.style.borderRadius="12px";div.style.fontWeight="600";div.style.boxShadow="0 6px 16px rgba(0,0,0,0.3)";div.style.zIndex="9999";div.style.fontFamily="Poppins";document.body.appendChild(div);setTimeout(()=>{div.remove()},3000)}
 
 /* USUARIOS */
-
-const usuariosSistema=[
-{user:"michelle",pass:"1234",rol:"jefa"},
-{user:"auner",pass:"1234",rol:"trabajador"},
-{user:"luis",pass:"1234",rol:"trabajador"}
-]
-
+const usuariosSistema=[{user:"michelle",pass:"1234",rol:"jefa"},{user:"auner",pass:"1234",rol:"trabajador"},{user:"luis",pass:"1234",rol:"trabajador"}]
 let usuarioActual=null
 
-function login(){
-
-const user=document.getElementById("usuario").value.toLowerCase()
-const pass=document.getElementById("clave").value
-
-const encontrado=usuariosSistema.find(u=>u.user===user&&u.pass===pass)
-
-if(encontrado){
-
-usuarioActual=encontrado
-
-localStorage.setItem("usuarioActivo",JSON.stringify(encontrado))
-
-document.getElementById("loginScreen").style.display="none"
-
-document.getElementById("usuarioActivo").innerText=encontrado.user
-
-}else{
-
-document.getElementById("errorLogin").innerText="Usuario o contraseña incorrecta"
-
-}
-
-}
-
-function logout(){
-
-localStorage.removeItem("usuarioActivo")
-location.reload()
-
-}
-
-window.addEventListener("load",()=>{
-
-const guardado=localStorage.getItem("usuarioActivo")
-
-if(guardado){
-
-usuarioActual=JSON.parse(guardado)
-
-document.getElementById("loginScreen").style.display="none"
-
-document.getElementById("usuarioActivo").innerText=usuarioActual.user
-
-}
-
-})
+function login(){const user=document.getElementById("usuario").value.toLowerCase();const pass=document.getElementById("clave").value;const encontrado=usuariosSistema.find(u=>u.user===user && u.pass===pass);if(encontrado){usuarioActual=encontrado;localStorage.setItem("usuarioActivo",JSON.stringify(encontrado));document.getElementById("loginScreen").style.display="none";document.getElementById("usuarioActivo").innerText=encontrado.user;mostrarHistorial();cargarProductosStock()} else{document.getElementById("errorLogin").innerText="Usuario o contraseña incorrecta"}}
+function logout(){localStorage.removeItem("usuarioActivo");location.reload()}
 
 /* PRODUCTOS */
-
-const productos=[
-
-{name:"Mobil Special 20W-50",price:1060,img:"30.jpeg",stock:10},
+const productosBase=[
+{name:"Mobil Special 20W-50",price:1060,img:"30.jpeg",stock:16},
 {name:"CLEAN ALL",price:180,img:"cleanall.jpg",stock:5},
 {name:"Freezetone Radiator",price:230,img:"freezetone.jpg",stock:8},
 {name:"Flamingo Foam Cleaner",price:150,img:"flamingo.jpg",stock:3},
 {name:"Shell Advance AX5 20W-50",price:280,img:"shell.jpg",stock:6},
 {name:"Letrero Taxi LED",price:600,img:"taxi.jpg",stock:4},
 {name:"Forro para Timón",price:450,img:"timon.jpg",stock:7}
-
 ]
-
+let productos = JSON.parse(localStorage.getItem("stockYoluvami")) || productosBase
 let ventaActual=[]
-let historial=JSON.parse(localStorage.getItem("ventasYoluvami"))||[]
+let historial=JSON.parse(localStorage.getItem("ventasYoluvami")) || []
 
 const select=document.getElementById("productoSelect")
 const buscador=document.getElementById("buscador")
 const imgPreview=document.getElementById("imgPreview")
 
+/* GUARDAR STOCK */
+function guardarStock(){localStorage.setItem("stockYoluvami",JSON.stringify(productos));mostrarAgotados();cargarProductosStock()}
+
+/* CARGAR PRODUCTOS */
 function cargarProductos(lista){
-
-select.innerHTML=""
-
-lista.forEach(p=>{
-
-select.innerHTML+=`<option value="${productos.indexOf(p)}">
-${p.name} - C$${p.price} (Stock: ${p.stock})
-</option>`
-
-})
-
-mostrarImagen()
-
+if(!select)return;select.innerHTML=""
+lista.forEach(p=>{select.innerHTML+=`<option value="${productos.indexOf(p)}">${p.name} - C$${p.price} (Stock: ${p.stock})</option>`})
+mostrarImagen();mostrarAgotados()
 }
+function mostrarImagen(){if(productos[select.value]&&imgPreview){imgPreview.src=productos[select.value].img}}
+if(select){select.addEventListener("change",mostrarImagen)}
+if(buscador){buscador.addEventListener("input",()=>{const texto=buscador.value.toLowerCase();cargarProductos(productos.filter(p=>p.name.toLowerCase().includes(texto)))})}
 
-cargarProductos(productos)
-
-buscador.addEventListener("input",()=>{
-
-const texto=buscador.value.toLowerCase()
-
-cargarProductos(
-productos.filter(p=>p.name.toLowerCase().includes(texto))
-)
-
-})
-
-function mostrarImagen(){
-
-if(productos[select.value]){
-imgPreview.src=productos[select.value].img
-}
-
-}
-
-select.addEventListener("change",mostrarImagen)
-
+/* AGREGAR VENTA */
 function agregarVenta(){
-
-const index=select.value
+const index=parseInt(select.value)
 const cantidad=parseInt(document.getElementById("cantidad").value)
-
-if(!cantidad||cantidad<=0)return alert("Cantidad inválida")
-
+if(!cantidad || cantidad<=0){alerta("Cantidad inválida","#dc2626");return}
 const producto=productos[index]
-
-if(producto.stock<cantidad){
-return alert("Stock insuficiente")
-}
-
+if(producto.stock===0){alerta("❌ Producto agotado","#dc2626");return}
+if(producto.stock<cantidad){alerta("⚠️ Stock insuficiente. Solo quedan "+producto.stock,"#f59e0b");return}
 producto.stock-=cantidad
-
+guardarStock()
 const subtotal=producto.price*cantidad
-
-ventaActual.push({...producto,cantidad,subtotal})
-
+ventaActual.push({name:producto.name,price:producto.price,img:producto.img,cantidad:cantidad,subtotal:subtotal})
+if(producto.stock===0){alerta("⚠️ "+producto.name+" se ha agotado","#dc2626")}
 actualizarTabla()
-
 document.getElementById("cantidad").value=""
-
 cargarProductos(productos)
-
 }
 
-function actualizarTabla(){
+/* TABLA VENTA */
+function actualizarTabla(){let total=0;const tbody=document.getElementById("tablaVenta");if(!tbody)return;tbody.innerHTML="";ventaActual.forEach((p,i)=>{total+=p.subtotal;tbody.innerHTML+=`<tr><td class="product-row"><img src="${p.img}">${p.name}</td><td>${p.cantidad}</td><td>C$${p.subtotal}</td><td><button class="deleteBtn" onclick="eliminar(${i})">X</button></td></tr>`});const totalVenta=document.getElementById("totalVenta");if(totalVenta) totalVenta.innerText=total}
 
-let total=0
-const tbody=document.getElementById("tablaVenta")
+/* ELIMINAR PRODUCTO */
+function eliminar(i){ventaActual.splice(i,1);actualizarTabla()}
 
-tbody.innerHTML=""
-
-ventaActual.forEach((p,i)=>{
-
-total+=p.subtotal
-
-tbody.innerHTML+=`
-
-<tr>
-
-<td class="product-row">
-<img src="${p.img}">
-${p.name}
-</td>
-
-<td>${p.cantidad}</td>
-
-<td>C$${p.subtotal}</td>
-
-<td>
-<button class="deleteBtn" onclick="eliminar(${i})">X</button>
-</td>
-
-</tr>
-
-`
-
-})
-
-document.getElementById("totalVenta").innerText=total
-
-}
-
-function eliminar(i){
-
-ventaActual.splice(i,1)
-
-actualizarTabla()
-
-}
-
+/* FINALIZAR VENTA */
 function finalizarVenta(){
-
-if(ventaActual.length===0)return alert("No hay productos")
-
+if(ventaActual.length===0){alerta("No hay productos","#dc2626");return}
 const fecha=new Date()
-
 const total=ventaActual.reduce((acc,p)=>acc+p.subtotal,0)
-
-historial.push({
-fecha:fecha.toLocaleDateString(),
-hora:fecha.toLocaleTimeString(),
-productos:ventaActual,
-total
-})
-
+historial.push({fecha:fecha.toLocaleDateString(),hora:fecha.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}),productos:[...ventaActual],total})
 localStorage.setItem("ventasYoluvami",JSON.stringify(historial))
-
 ventaActual=[]
-
 actualizarTabla()
-
 mostrarHistorial()
-
 }
 
+/* HISTORIAL */
 function mostrarHistorial(){
-
-const div=document.getElementById("historial")
-
-div.innerHTML=""
-
-let ingresos=0
-
-historial.forEach((v,index)=>{
-
-ingresos+=v.total
-
-let botonEliminar=""
-
-if(usuarioActual && usuarioActual.rol==="jefa"){
-
-botonEliminar=`<button class="deleteBtn" onclick="borrarRegistro(${index})">Eliminar</button>`
-
-}
-
-div.innerHTML+=`
-
-<div style="background:#f9fafc;padding:15px;border-radius:12px;margin-bottom:12px">
-
-<div><strong>${v.fecha} - ${v.hora}</strong></div>
-
-<p>Total: C$${v.total}</p>
-
-${botonEliminar}
-
-</div>
-
-`
-
-})
-
-document.getElementById("resumen").innerHTML=`
-<p><strong>Total Ingresos:</strong> C$${ingresos}</p>
-<canvas id="grafica"></canvas>
-<button onclick="exportarExcel()">Descargar Excel</button>
-<button onclick="generarPDF()">Descargar PDF</button>
-<button onclick="enviarWhatsApp()">Enviar WhatsApp</button>
-`
-
+const div=document.getElementById("historial");if(!div)return;div.innerHTML="";let ingresos=0
+historial.forEach((v,index)=>{ingresos+=v.total;let productosHTML=""
+v.productos.forEach(p=>{productosHTML+=`<div style="display:flex;align-items:center;gap:10px;margin:6px 0"><img src="${p.img}" style="width:35px;border-radius:8px"><div style="font-size:13px">${p.name} x${p.cantidad}</div><div style="margin-left:auto;font-weight:600">C$${p.subtotal}</div></div>`})
+div.innerHTML+=`<div style="background:#f9fafc;padding:15px;border-radius:12px;margin-bottom:12px"><div style="font-weight:600;margin-bottom:8px">${v.fecha} - ${v.hora}</div>${productosHTML}<div style="margin-top:8px;font-weight:700;color:#059669">Total: C$${v.total}</div><button class="deleteBtn" onclick="borrarRegistro(${index})">Eliminar</button></div>`})
+document.getElementById("resumen").innerHTML=`<p><strong>Total Ingresos:</strong> C$${ingresos}</p><canvas id="grafica"></canvas><button onclick="exportarExcel()">Descargar Excel</button><button onclick="generarPDF()">Descargar PDF</button><button onclick="enviarWhatsApp()">Enviar WhatsApp</button>`
 crearGrafica()
-
 }
 
+/* PRODUCTOS AGOTADOS */
+function mostrarAgotados(){
+const div=document.getElementById("agotados");if(!div)return;div.innerHTML=""
+productos.forEach(p=>{if(p.stock===0){div.innerHTML+=`<div style="display:flex;align-items:center;gap:10px;background:#fff1f2;padding:8px;border-radius:10px;margin-bottom:6px"><img src="${p.img}" style="width:30px;border-radius:6px"><span style="color:#dc2626;font-weight:600">${p.name} AGOTADO</span></div>`}})
+}
+
+/* AGREGAR STOCK */
+function cargarProductosStock(){
+const selectStock=document.getElementById("productoStock");if(!selectStock)return;selectStock.innerHTML=""
+productos.forEach((p,i)=>{selectStock.innerHTML+=`<option value="${i}">${p.name} - Stock: ${p.stock}</option>`})
+}
+cargarProductosStock()
+function agregarStock(){
+const index=parseInt(document.getElementById("productoStock").value)
+const cantidad=parseInt(document.getElementById("cantidadStock").value)
+if(!cantidad||cantidad<=0){alerta("Cantidad inválida","#dc2626");return}
+productos[index].stock+=cantidad
+guardarStock()
+document.getElementById("cantidadStock").value=""
+alerta("Stock actualizado","#16a34a")
+}
+
+/* BORRAR REGISTRO */
+function borrarRegistro(index){if(confirm("¿Eliminar este registro?")){historial.splice(index,1);localStorage.setItem("ventasYoluvami",JSON.stringify(historial));mostrarHistorial()}}
+
+/* GRAFICA */
 let graficaActual=null
+function crearGrafica(){const ctx=document.getElementById("grafica");if(!ctx)return;if(graficaActual) graficaActual.destroy();const meses={};historial.forEach(v=>{let mes=v.fecha.split("/")[1];meses[mes]=(meses[mes]||0)+v.total});graficaActual=new Chart(ctx,{type:"bar",data:{labels:Object.keys(meses),datasets:[{label:"Ingresos por Mes",data:Object.values(meses),backgroundColor:"#3b82f6"}]},options:{responsive:true,plugins:{legend:{display:false}}}})}
 
-function crearGrafica(){
+/* EXPORTAR */
+function exportarExcel(){const wb=XLSX.utils.book_new();const ws=XLSX.utils.json_to_sheet(historial);XLSX.utils.book_append_sheet(wb,ws,"Ventas");XLSX.writeFile(wb,"Ventas_YOLUVAMI.xlsx")}
+async function generarPDF(){const { jsPDF}=window.jspdf;const doc=new jsPDF();let y=20;doc.setFontSize(16);doc.text("YOLUVAMI Reporte",70,y);y+=15;let totalGeneral=0;historial.forEach(v=>{doc.text(`${v.fecha} ${v.hora} - C$${v.total}`,10,y);y+=8;totalGeneral+=v.total});doc.text(`TOTAL GENERAL: C$${totalGeneral}`,10,y+10);doc.save("Factura_YOLUVAMI.pdf")}
 
-const ctx=document.getElementById("grafica")
+/* WHATSAPP */
+function enviarWhatsApp(){let mensaje="📊 Resumen YOLUVAMI\n";let total=0;historial.forEach(v=>{mensaje+=`${v.fecha} ${v.hora} - C$${v.total}\n`;total+=v.total});mensaje+=`\nTotal General: C$${total}`;window.open(`https://wa.me/?text=${encodeURIComponent(mensaje)}`)}
 
-if(!ctx)return
-
-if(graficaActual)graficaActual.destroy()
-
-const meses={}
-
-historial.forEach(v=>{
-
-let mes=v.fecha.split("/")[1]
-
-meses[mes]=(meses[mes]||0)+v.total
-
-})
-
-graficaActual=new Chart(ctx,{
-type:"bar",
-data:{
-labels:Object.keys(meses),
-datasets:[{
-label:"Ingresos por Mes",
-data:Object.values(meses)
-}]
-}
-})
-
-}
-
-function exportarExcel(){
-
-const wb=XLSX.utils.book_new()
-
-const ws=XLSX.utils.json_to_sheet(historial)
-
-XLSX.utils.book_append_sheet(wb,ws,"Ventas")
-
-XLSX.writeFile(wb,"Ventas_YOLUVAMI.xlsx")
-
-}
-
-async function generarPDF(){
-
-const { jsPDF }=window.jspdf
-
-const doc=new jsPDF()
-
-let y=20
-
-doc.setFontSize(16)
-
-doc.text("YOLUVAMI Reporte",70,y)
-
-y+=15
-
-let totalGeneral=0
-
-historial.forEach(v=>{
-
-doc.text(`${v.fecha} ${v.hora} - C$${v.total}`,10,y)
-
-y+=8
-
-totalGeneral+=v.total
-
-})
-
-doc.text(`TOTAL GENERAL: C$${totalGeneral}`,10,y+10)
-
-doc.save("Factura_YOLUVAMI.pdf")
-
-}
-
-function enviarWhatsApp(){
-
-let mensaje="📊 Resumen YOLUVAMI\n"
-
-let total=0
-
-historial.forEach(v=>{
-
-mensaje+=`${v.fecha} ${v.hora} - C$${v.total}\n`
-
-total+=v.total
-
-})
-
-mensaje+=`\nTotal General: C$${total}`
-
-window.open(`https://wa.me/?text=${encodeURIComponent(mensaje)}`)
-
-}
-
-mostrarHistorial()
-
-/* PWA */
-
-if("serviceWorker" in navigator){
-
+/* INICIAR SISTEMA */
 window.addEventListener("load",()=>{
-
-navigator.serviceWorker.register("sw.js");
-
-});
-
-}
-
-let deferredPrompt;
-
-window.addEventListener("beforeinstallprompt",(e)=>{
-
-e.preventDefault();
-
-deferredPrompt=e;
-
-document.getElementById("instalarBtn").style.display="block";
-
-});
-
-document.getElementById("instalarBtn").addEventListener("click",async ()=>{
-
-if(deferredPrompt){
-
-deferredPrompt.prompt();
-
-await deferredPrompt.userChoice;
-
-deferredPrompt=null;
-
-}
-
-});
+const guardado=localStorage.getItem("usuarioActivo")
+if(guardado){usuarioActual=JSON.parse(guardado);const loginScreen=document.getElementById("loginScreen");const usuarioTexto=document.getElementById("usuarioActivo");if(loginScreen) loginScreen.style.display="none";if(usuarioTexto) usuarioTexto.innerText=usuarioActual.user}
+cargarProductos(productos)
+historial = JSON.parse(localStorage.getItem("ventasYoluvami")) || []
+mostrarHistorial()
+mostrarAgotados()
+cargarProductosStock()
+})
 </script>
-
 </body>
 </html>
