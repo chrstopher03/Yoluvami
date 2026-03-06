@@ -813,8 +813,10 @@ function seguirAhora(){
 /* ===================== */
 /* HORARIO NICARAGUA */
 /* ===================== */
-
-function actualizarEstado(){
+/* ===================== */
+/* ESTADO DEL NEGOCIO (HORARIO NICARAGUA) */
+/* ===================== */
+function actualizarEstado() {
   const ahora = new Date();
   const opciones = { timeZone: 'America/Managua', hour12: false };
   const horaNica = new Date(ahora.toLocaleString('en-US', opciones));
@@ -823,43 +825,75 @@ function actualizarEstado(){
   const minutos = horaNica.getMinutes();
   const totalMinutos = hora * 60 + minutos;
 
-  const apertura = 8 * 60 + 30;
-  const cierre = 16 * 60;
+  const apertura = 8 * 60 + 30; // 8:30 AM
+  const cierre = 16 * 60;       // 4:00 PM
 
-  if(totalMinutos >= apertura && totalMinutos < cierre){
-    const faltan = cierre - totalMinutos;
-    const h = Math.floor(faltan / 60);
-    const m = faltan % 60;
+  let faltan, h, m;
+
+  if (totalMinutos >= apertura && totalMinutos < cierre) {
+    // Abierto
+    faltan = cierre - totalMinutos;
+    h = Math.floor(faltan / 60);
+    m = faltan % 60;
     statusElement.innerHTML = `🟢 Abierto · Cierra en ${h}h ${m}m`;
     statusElement.className = "status abierto";
-  }else{
-    let faltan;
-    if(totalMinutos < apertura){
-      faltan = apertura - totalMinutos;
-    }else{
-      faltan = (24 * 60 - totalMinutos) + apertura;
-    }
-    const h = Math.floor(faltan / 60);
-    const m = faltan % 60;
+  } else {
+    // Cerrado
+    faltan = totalMinutos < apertura
+      ? apertura - totalMinutos
+      : (24 * 60 - totalMinutos) + apertura;
+    h = Math.floor(faltan / 60);
+    m = faltan % 60;
     statusElement.innerHTML = `🔴 Cerrado · Abre en ${h}h ${m}m`;
     statusElement.className = "status cerrado";
   }
 }
 
-setInterval(actualizarEstado,60000);
+// Actualizar cada minuto y al inicio
 actualizarEstado();
+setInterval(actualizarEstado, 60000);
 
+
+/* ===================== */
 /* PWA INSTALAR APP */
-if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js")})}
-let deferredPrompt
-const btnInstalar=document.getElementById("instalarBtn")
-if(btnInstalar){btnInstalar.style.display="none";window.addEventListener("beforeinstallprompt",(e)=>{e.preventDefault();deferredPrompt=e;btnInstalar.style.display="block"});btnInstalar.addEventListener("click",async()=>{if(deferredPrompt){deferredPrompt.prompt();const resultado=await deferredPrompt.userChoice;if(resultado.outcome==="accepted") btnInstalar.style.display="none";deferredPrompt=null}})}
+/* ===================== */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js');
+  });
+}
 
-/* FILTROS */
-categoriaFiltro.addEventListener("change",mostrarProductos);
-precioMin.addEventListener("input",mostrarProductos);
-precioMax.addEventListener("input",mostrarProductos);
+let deferredPrompt;
+const btnInstalar = document.getElementById('instalarBtn');
 
+if (btnInstalar) {
+  btnInstalar.style.display = 'none';
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    btnInstalar.style.display = 'block';
+  });
+
+  btnInstalar.addEventListener('click', async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const resultado = await deferredPrompt.userChoice;
+      if (resultado.outcome === 'accepted') btnInstalar.style.display = 'none';
+      deferredPrompt = null;
+    }
+  });
+}
+
+
+/* ===================== */
+/* FILTROS DE PRODUCTOS */
+/* ===================== */
+categoriaFiltro.addEventListener('change', mostrarProductos);
+precioMin.addEventListener('input', mostrarProductos);
+precioMax.addEventListener('input', mostrarProductos);
+
+/* Mostrar productos al cargar */
 mostrarProductos();
 </script>
 
