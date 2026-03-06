@@ -870,8 +870,7 @@ categoriaFiltro.addEventListener("change",mostrarProductos);
 precioMin.addEventListener("input",mostrarProductos);
 precioMax.addEventListener("input",mostrarProductos);
 
-mostrarProductos();
-/* ===================== */
+mostrarProductos();/* ===================== */
 /* PWA INSTALACIÓN APP   */
 /* ===================== */
 
@@ -886,20 +885,33 @@ if ('serviceWorker' in navigator) {
 let deferredPrompt;
 const instalarBtn = document.getElementById('instalarBtn');
 
+// Detecta cuando la app puede ser instalada
 window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault();
-  deferredPrompt = e;
-  instalarBtn.style.display = 'inline-block';
+  e.preventDefault();            // Evita que el navegador muestre el prompt automáticamente
+  deferredPrompt = e;            // Guardamos el evento
+  instalarBtn.style.display = 'inline-block'; // Mostramos el botón
 });
 
+// Evento click en el botón instalar
 instalarBtn.addEventListener('click', async () => {
-  if (deferredPrompt) {
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    console.log('Instalación:', outcome);
-    deferredPrompt = null;
-    instalarBtn.style.display = 'none';
+  if (!deferredPrompt) return;
+
+  deferredPrompt.prompt();        // Muestra el prompt de instalación
+  const { outcome } = await deferredPrompt.userChoice;
+
+  if (outcome === 'accepted') {
+    console.log('Usuario aceptó instalar la app ✅');
+  } else {
+    console.log('Usuario canceló la instalación ❌');
   }
+
+  deferredPrompt = null;         // Limpiamos el evento
+  instalarBtn.style.display = 'none'; // Ocultamos el botón después de usarlo
+});
+
+// Opcional: detectar cuando la app se instala exitosamente
+window.addEventListener('appinstalled', () => {
+  console.log('La app fue instalada 🎉');
 });
 </script>
 
