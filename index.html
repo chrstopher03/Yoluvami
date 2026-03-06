@@ -855,6 +855,37 @@ let deferredPrompt
 const btnInstalar=document.getElementById("instalarBtn")
 if(btnInstalar){btnInstalar.style.display="none";window.addEventListener("beforeinstallprompt",(e)=>{e.preventDefault();deferredPrompt=e;btnInstalar.style.display="block"});btnInstalar.addEventListener("click",async()=>{if(deferredPrompt){deferredPrompt.prompt();const resultado=await deferredPrompt.userChoice;if(resultado.outcome==="accepted") btnInstalar.style.display="none";deferredPrompt=null}})}
 
+/* ===================== */
+/* PWA INSTALACIÓN APP    */
+/* ===================== */
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js')
+    .then(() => console.log('Service Worker registrado ✅'))
+    .catch(err => console.log('Error SW:', err));
+}
+
+// Detecta cuando la app puede ser instalada
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  instalarBtn.style.display = 'block'; // Mostrar botón
+});
+
+// Al hacer click en instalar
+instalarBtn.addEventListener('click', async () => {
+  if (deferredPrompt) {
+    deferredPrompt.prompt(); // Muestra el prompt de instalación
+    const choiceResult = await deferredPrompt.userChoice;
+    if (choiceResult.outcome === 'accepted') {
+      console.log('Usuario instaló la app ✅');
+    } else {
+      console.log('Usuario canceló la instalación ❌');
+    }
+    deferredPrompt = null;
+    instalarBtn.style.display = 'none'; // Oculta botón después
+  }
+});
 /* FILTROS */
 categoriaFiltro.addEventListener("change",mostrarProductos);
 precioMin.addEventListener("input",mostrarProductos);
