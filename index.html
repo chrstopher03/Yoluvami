@@ -853,39 +853,54 @@ function actualizarEstado() {
 actualizarEstado();
 setInterval(actualizarEstado, 60000);
 
-
 /* ===================== */
-/* PWA INSTALAR APP */
+/* PWA INSTALAR APP       */
 /* ===================== */
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js');
+    navigator.serviceWorker.register('sw.js')
+      .then(() => console.log('Service Worker registrado ✅'))
+      .catch(err => console.log('Error SW:', err));
   });
 }
 
 let deferredPrompt;
 const btnInstalar = document.getElementById('instalarBtn');
 
+// Aseguramos que el botón exista en la página
 if (btnInstalar) {
   btnInstalar.style.display = 'none';
 
+  // Evento antes de instalar la PWA
   window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
+    e.preventDefault(); // evita el prompt automático
     deferredPrompt = e;
-    btnInstalar.style.display = 'block';
+    console.log('PWA instalable: evento beforeinstallprompt disparado ✅');
+    btnInstalar.style.display = 'block'; // mostramos el botón
   });
 
+  // Click en el botón para instalar
   btnInstalar.addEventListener('click', async () => {
     if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const resultado = await deferredPrompt.userChoice;
-      if (resultado.outcome === 'accepted') btnInstalar.style.display = 'none';
+      deferredPrompt.prompt(); // muestra el prompt
+      const { outcome } = await deferredPrompt.userChoice;
+      console.log('Resultado instalación:', outcome);
+      if (outcome === 'accepted') {
+        console.log('Usuario aceptó instalar la app ✅');
+        btnInstalar.style.display = 'none';
+      } else {
+        console.log('Usuario canceló la instalación ❌');
+      }
       deferredPrompt = null;
     }
   });
 }
 
-
+// Evento opcional para detectar cuando la app ya está instalada
+window.addEventListener('appinstalled', () => {
+  console.log('PWA ya instalada 🎉');
+  if (btnInstalar) btnInstalar.style.display = 'none';
+});
 /* ===================== */
 /* FILTROS DE PRODUCTOS */
 /* ===================== */
