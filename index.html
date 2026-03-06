@@ -46,15 +46,16 @@ margin-bottom:20px;
 box-shadow:0 10px 25px rgba(0,0,0,.08)
 }
 
-input,select,button{
+input, select, button{
+width:100%;
 padding:12px;
 border-radius:12px;
 border:1px solid #ddd;
-margin-bottom:10px;
-width:100%;
-font-size:14px
+margin:10px 0;
+font-size:14px;
+box-sizing:border-box;
+display:block;
 }
-
 button{
 background:linear-gradient(135deg,#1e3a8a,#2563eb);
 color:white;
@@ -69,6 +70,10 @@ transform:scale(.97)
 
 .deleteBtn{
 background:#dc2626
+}
+
+.logoutBtn{
+background:#111
 }
 
 table{
@@ -107,21 +112,72 @@ margin-top:10px
 }
 
 canvas{
-width:100% !important;
-height:300px !important
+width:100%!important;
+height:300px!important
 }
 
-#instalarBtn{
-display:none;
-background:#059669
+/* LOGIN */
+#loginScreen{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:#1e3a8a;
+display:flex;
+align-items:center;
+justify-content:center;
+z-index:9999;
+padding:20px; /* espacio lateral para móvil */
+box-sizing:border-box;
+}
+
+.loginBox{
+background:white;
+padding:30px;
+border-radius:20px;
+width:100%;
+max-width:340px;
+text-align:center;
+margin:auto;
+box-shadow:0 15px 40px rgba(0,0,0,.2);
 }
 
 </style>
+
 </head>
 
 <body>
 
-<header>YOLUVAMI Sistema Profesional</header>
+<div id="loginScreen">
+
+<div class="loginBox">
+
+<h2>Acceso</h2>
+
+<input type="text" id="usuario" placeholder="Usuario">
+<input type="password" id="clave" placeholder="Contraseña">
+
+<button onclick="login()">Ingresar</button>
+
+<p id="errorLogin" style="color:red"></p>
+
+</div>
+
+</div>
+
+<header>
+
+YOLUVAMI
+
+<div style="font-size:13px;margin-top:5px">
+Usuario: <span id="usuarioActivo"></span>
+</div>
+
+<button id="instalarBtn">📲 Instalar Aplicación</button>
+<button class="logoutBtn" onclick="logout()">Cerrar sesión</button>
+
+</header>
 
 <div class="container">
 
@@ -140,6 +196,7 @@ background:#059669
 <button onclick="agregarVenta()">Agregar Producto</button>
 
 <table>
+
 <thead>
 <tr>
 <th>Producto</th>
@@ -150,6 +207,7 @@ background:#059669
 </thead>
 
 <tbody id="tablaVenta"></tbody>
+
 </table>
 
 <div class="totalVentaBox">
@@ -161,22 +219,84 @@ Total: C$<span id="totalVenta">0</span>
 </div>
 
 <div class="card">
+
 <h3>Historial del Día</h3>
+
 <div id="historial"></div>
+
 </div>
 
 <div class="card">
+
 <h3>Resumen General</h3>
+
 <div id="resumen"></div>
 
-<button id="instalarBtn">📲 Instalar Aplicación</button>
 </div>
 
 </div>
 
 <script>
 
-/* PRODUCTOS CON STOCK */
+/* USUARIOS */
+
+const usuariosSistema=[
+{user:"michelle",pass:"1234",rol:"jefa"},
+{user:"auner",pass:"1234",rol:"trabajador"},
+{user:"luis",pass:"1234",rol:"trabajador"}
+]
+
+let usuarioActual=null
+
+function login(){
+
+const user=document.getElementById("usuario").value.toLowerCase()
+const pass=document.getElementById("clave").value
+
+const encontrado=usuariosSistema.find(u=>u.user===user&&u.pass===pass)
+
+if(encontrado){
+
+usuarioActual=encontrado
+
+localStorage.setItem("usuarioActivo",JSON.stringify(encontrado))
+
+document.getElementById("loginScreen").style.display="none"
+
+document.getElementById("usuarioActivo").innerText=encontrado.user
+
+}else{
+
+document.getElementById("errorLogin").innerText="Usuario o contraseña incorrecta"
+
+}
+
+}
+
+function logout(){
+
+localStorage.removeItem("usuarioActivo")
+location.reload()
+
+}
+
+window.addEventListener("load",()=>{
+
+const guardado=localStorage.getItem("usuarioActivo")
+
+if(guardado){
+
+usuarioActual=JSON.parse(guardado)
+
+document.getElementById("loginScreen").style.display="none"
+
+document.getElementById("usuarioActivo").innerText=usuarioActual.user
+
+}
+
+})
+
+/* PRODUCTOS */
 
 const productos=[
 
@@ -188,326 +308,297 @@ const productos=[
 {name:"Letrero Taxi LED",price:600,img:"taxi.jpg",stock:4},
 {name:"Forro para Timón",price:450,img:"timon.jpg",stock:7}
 
-];
+]
 
-let ventaActual=[];
+let ventaActual=[]
+let historial=JSON.parse(localStorage.getItem("ventasYoluvami"))||[]
 
-let historial=JSON.parse(localStorage.getItem("ventasYoluvami"))||[];
-
-const select=document.getElementById("productoSelect");
-const buscador=document.getElementById("buscador");
-const imgPreview=document.getElementById("imgPreview");
+const select=document.getElementById("productoSelect")
+const buscador=document.getElementById("buscador")
+const imgPreview=document.getElementById("imgPreview")
 
 function cargarProductos(lista){
 
-select.innerHTML="";
+select.innerHTML=""
 
 lista.forEach(p=>{
 
 select.innerHTML+=`<option value="${productos.indexOf(p)}">
 ${p.name} - C$${p.price} (Stock: ${p.stock})
-</option>`;
+</option>`
 
-});
+})
 
-mostrarImagen();
+mostrarImagen()
 
 }
 
-cargarProductos(productos);
+cargarProductos(productos)
 
 buscador.addEventListener("input",()=>{
 
-const texto=buscador.value.toLowerCase();
+const texto=buscador.value.toLowerCase()
 
 cargarProductos(
 productos.filter(p=>p.name.toLowerCase().includes(texto))
-);
+)
 
-});
+})
 
 function mostrarImagen(){
 
 if(productos[select.value]){
-imgPreview.src=productos[select.value].img;
+imgPreview.src=productos[select.value].img
 }
 
 }
 
-select.addEventListener("change",mostrarImagen);
+select.addEventListener("change",mostrarImagen)
 
 function agregarVenta(){
 
-const index=select.value;
+const index=select.value
+const cantidad=parseInt(document.getElementById("cantidad").value)
 
-const cantidad=parseInt(document.getElementById("cantidad").value);
+if(!cantidad||cantidad<=0)return alert("Cantidad inválida")
 
-if(!cantidad||cantidad<=0)return alert("Cantidad inválida");
+const producto=productos[index]
 
-const producto=productos[index];
-
-if(producto.stock < cantidad){
-return alert("Stock insuficiente");
+if(producto.stock<cantidad){
+return alert("Stock insuficiente")
 }
 
-producto.stock -= cantidad;
+producto.stock-=cantidad
 
-const subtotal=producto.price*cantidad;
+const subtotal=producto.price*cantidad
 
-ventaActual.push({...producto,cantidad,subtotal});
+ventaActual.push({...producto,cantidad,subtotal})
 
-actualizarTabla();
+actualizarTabla()
 
-document.getElementById("cantidad").value="";
+document.getElementById("cantidad").value=""
 
-cargarProductos(productos);
+cargarProductos(productos)
 
 }
 
 function actualizarTabla(){
 
-let total=0;
+let total=0
+const tbody=document.getElementById("tablaVenta")
 
-const tbody=document.getElementById("tablaVenta");
-
-tbody.innerHTML="";
+tbody.innerHTML=""
 
 ventaActual.forEach((p,i)=>{
 
-total+=p.subtotal;
+total+=p.subtotal
 
 tbody.innerHTML+=`
+
 <tr>
+
 <td class="product-row">
-<img src="${p.img}"> ${p.name}
+<img src="${p.img}">
+${p.name}
 </td>
+
 <td>${p.cantidad}</td>
+
 <td>C$${p.subtotal}</td>
+
 <td>
 <button class="deleteBtn" onclick="eliminar(${i})">X</button>
 </td>
+
 </tr>
-`;
 
-});
+`
 
-document.getElementById("totalVenta").innerText=total;
+})
+
+document.getElementById("totalVenta").innerText=total
 
 }
 
 function eliminar(i){
 
-ventaActual.splice(i,1);
+ventaActual.splice(i,1)
 
-actualizarTabla();
+actualizarTabla()
 
 }
 
 function finalizarVenta(){
 
-if(ventaActual.length===0)return alert("No hay productos");
+if(ventaActual.length===0)return alert("No hay productos")
 
-const fecha=new Date();
+const fecha=new Date()
 
-const total=ventaActual.reduce((acc,p)=>acc+p.subtotal,0);
+const total=ventaActual.reduce((acc,p)=>acc+p.subtotal,0)
 
 historial.push({
 fecha:fecha.toLocaleDateString(),
 hora:fecha.toLocaleTimeString(),
 productos:ventaActual,
 total
-});
+})
 
-localStorage.setItem("ventasYoluvami",JSON.stringify(historial));
+localStorage.setItem("ventasYoluvami",JSON.stringify(historial))
 
-ventaActual=[];
+ventaActual=[]
 
-actualizarTabla();
+actualizarTabla()
 
-mostrarHistorial();
+mostrarHistorial()
 
 }
 
 function mostrarHistorial(){
 
-const div=document.getElementById("historial");
+const div=document.getElementById("historial")
 
-div.innerHTML="";
+div.innerHTML=""
 
-let ingresos=0;
+let ingresos=0
 
 historial.forEach((v,index)=>{
 
-ingresos+=v.total;
+ingresos+=v.total
+
+let botonEliminar=""
+
+if(usuarioActual && usuarioActual.rol==="jefa"){
+
+botonEliminar=`<button class="deleteBtn" onclick="borrarRegistro(${index})">Eliminar</button>`
+
+}
 
 div.innerHTML+=`
+
 <div style="background:#f9fafc;padding:15px;border-radius:12px;margin-bottom:12px">
 
 <div><strong>${v.fecha} - ${v.hora}</strong></div>
 
 <p>Total: C$${v.total}</p>
 
-<button class="deleteBtn" onclick="borrarRegistro(${index})">
-Eliminar
-</button>
+${botonEliminar}
 
 </div>
-`;
 
-});
+`
 
-let alertaStock="";
-
-productos.forEach(p=>{
-
-if(p.stock<=3){
-alertaStock+=`⚠ ${p.name} stock bajo (${p.stock})<br>`;
-}
-
-});
+})
 
 document.getElementById("resumen").innerHTML=`
-
 <p><strong>Total Ingresos:</strong> C$${ingresos}</p>
-
 <canvas id="grafica"></canvas>
-
 <button onclick="exportarExcel()">Descargar Excel</button>
-
 <button onclick="generarPDF()">Descargar PDF</button>
-
 <button onclick="enviarWhatsApp()">Enviar WhatsApp</button>
+`
 
-<div style="margin-top:15px;color:#dc2626;font-weight:600">
-${alertaStock}
-</div>
-
-`;
-
-crearGrafica();
+crearGrafica()
 
 }
 
-function borrarRegistro(i){
-
-if(confirm("¿Eliminar registro?")){
-
-historial.splice(i,1);
-
-localStorage.setItem("ventasYoluvami",JSON.stringify(historial));
-
-mostrarHistorial();
-
-}
-
-}
-
-let graficaActual=null;
+let graficaActual=null
 
 function crearGrafica(){
 
-const ctx=document.getElementById("grafica");
+const ctx=document.getElementById("grafica")
 
-if(!ctx)return;
+if(!ctx)return
 
-if(graficaActual)graficaActual.destroy();
+if(graficaActual)graficaActual.destroy()
 
-const meses={};
+const meses={}
 
 historial.forEach(v=>{
 
-let mes=v.fecha.split("/")[1];
+let mes=v.fecha.split("/")[1]
 
-meses[mes]=(meses[mes]||0)+v.total;
+meses[mes]=(meses[mes]||0)+v.total
 
-});
+})
 
 graficaActual=new Chart(ctx,{
-
 type:"bar",
-
 data:{
 labels:Object.keys(meses),
 datasets:[{
 label:"Ingresos por Mes",
 data:Object.values(meses)
 }]
-},
-
-options:{
-responsive:true,
-maintainAspectRatio:false
 }
-
-});
+})
 
 }
 
 function exportarExcel(){
 
-const wb=XLSX.utils.book_new();
+const wb=XLSX.utils.book_new()
 
-const ws=XLSX.utils.json_to_sheet(historial);
+const ws=XLSX.utils.json_to_sheet(historial)
 
-XLSX.utils.book_append_sheet(wb,ws,"Ventas");
+XLSX.utils.book_append_sheet(wb,ws,"Ventas")
 
-XLSX.writeFile(wb,"Ventas_YOLUVAMI.xlsx");
+XLSX.writeFile(wb,"Ventas_YOLUVAMI.xlsx")
 
 }
 
 async function generarPDF(){
 
-const { jsPDF }=window.jspdf;
+const { jsPDF }=window.jspdf
 
-const doc=new jsPDF();
+const doc=new jsPDF()
 
-let y=20;
+let y=20
 
-doc.setFontSize(16);
+doc.setFontSize(16)
 
-doc.text("YOLUVAMI Reporte",70,y);
+doc.text("YOLUVAMI Reporte",70,y)
 
-y+=15;
+y+=15
 
-let totalGeneral=0;
+let totalGeneral=0
 
 historial.forEach(v=>{
 
-doc.text(`${v.fecha} ${v.hora} - C$${v.total}`,10,y);
+doc.text(`${v.fecha} ${v.hora} - C$${v.total}`,10,y)
 
-y+=8;
+y+=8
 
-totalGeneral+=v.total;
+totalGeneral+=v.total
 
-});
+})
 
-doc.text(`TOTAL GENERAL: C$${totalGeneral}`,10,y+10);
+doc.text(`TOTAL GENERAL: C$${totalGeneral}`,10,y+10)
 
-doc.save("Factura_YOLUVAMI.pdf");
+doc.save("Factura_YOLUVAMI.pdf")
 
 }
 
 function enviarWhatsApp(){
 
-let mensaje="📊 Resumen YOLUVAMI\n";
+let mensaje="📊 Resumen YOLUVAMI\n"
 
-let total=0;
+let total=0
 
 historial.forEach(v=>{
 
-mensaje+=`${v.fecha} ${v.hora} - C$${v.total}\n`;
+mensaje+=`${v.fecha} ${v.hora} - C$${v.total}\n`
 
-total+=v.total;
+total+=v.total
 
-});
+})
 
-mensaje+=`\nTotal General: C$${total}`;
+mensaje+=`\nTotal General: C$${total}`
 
-window.open(`https://wa.me/?text=${encodeURIComponent(mensaje)}`);
+window.open(`https://wa.me/?text=${encodeURIComponent(mensaje)}`)
 
 }
 
-mostrarHistorial();
+mostrarHistorial()
 
 /* PWA */
 
@@ -546,7 +637,6 @@ deferredPrompt=null;
 }
 
 });
-
 </script>
 
 </body>
