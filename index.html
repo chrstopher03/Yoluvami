@@ -854,60 +854,30 @@ function actualizarEstado() {
 actualizarEstado();
 setInterval(actualizarEstado, 60000);
 /* ===================== */
-/* PWA INSTALAR APP       */
+/* PWA - INSTALACIÓN */
 /* ===================== */
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js')
-      .then(() => console.log('Service Worker registrado ✅'))
-      .catch(err => console.log('Error SW:', err));
-  });
-}
-
 let deferredPrompt;
-const btnInstalar = document.getElementById('instalarBtn');
-
-if (btnInstalar) {
-  btnInstalar.style.display = 'none'; // oculto por defecto
-
-  // Evento antes de instalar
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault(); // evita el prompt automático
-    deferredPrompt = e;
-    console.log('PWA instalable: evento beforeinstallprompt disparado ✅');
-    btnInstalar.style.display = 'block'; // mostramos botón
-  });
-
-  // Click en botón
-  btnInstalar.addEventListener('click', async () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt(); // muestra el prompt
-      const { outcome } = await deferredPrompt.userChoice;
-      console.log('Resultado instalación:', outcome);
-      if (outcome === 'accepted') {
-        console.log('Usuario aceptó instalar la app ✅');
-        btnInstalar.style.display = 'none';
-      } else {
-        console.log('Usuario canceló la instalación ❌');
-      }
-      deferredPrompt = null;
-    }
-  });
-}
-
-// Detecta si la app ya está instalada
-window.addEventListener('appinstalled', () => {
-  console.log('PWA ya instalada 🎉');
-  if (btnInstalar) btnInstalar.style.display = 'none';
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById("instalarBtn").style.display = "block";
 });
-/* ===================== */
-/* FILTROS DE PRODUCTOS */
-/* ===================== */
-categoriaFiltro.addEventListener('change', mostrarProductos);
-precioMin.addEventListener('input', mostrarProductos);
-precioMax.addEventListener('input', mostrarProductos);
 
-/* Mostrar productos al cargar */
+document.getElementById("instalarBtn").addEventListener("click", async () => {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    const choice = await deferredPrompt.userChoice;
+    if(choice.outcome === 'accepted') {
+      console.log('PWA instalada');
+    }
+    deferredPrompt = null;
+    document.getElementById("instalarBtn").style.display = "none";
+  }
+});
+
+/* ===================== */
+/* INICIALIZACIÓN */
+/* ===================== */
 mostrarProductos();
 </script>
 
