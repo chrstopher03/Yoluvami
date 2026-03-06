@@ -329,23 +329,6 @@ line-height:1.5;
   flex: 1;
   transition: 0.3s;
 }
-#instalarBtn{
-  display:none;
-  margin-top:10px;
-  padding:10px 18px;
-  border:none;
-  border-radius:25px;
-  background:#065f46;
-  color:#fff;
-  font-weight:600;
-  font-size:13px;
-  cursor:pointer;
-  transition:0.3s;
-}
-
-#instalarBtn:hover{
-  background:#047857;
-}
 .bottomNav .navItem.active,
 .bottomNav .navItem:hover {
   color: #fff;
@@ -427,7 +410,17 @@ line-height:1.5;
 <input type="number" id="precioMin" placeholder="Precio mínimo">
 <input type="number" id="precioMax" placeholder="Precio máximo">
 </div>
-
+<button id="instalarBtn" style="display:none; 
+    padding:10px 18px; 
+    border:none; 
+    border-radius:25px; 
+    background:#fff; 
+    color:#1e3a8a; 
+    font-weight:600; 
+    font-size:14px; 
+    cursor:pointer;">
+📲 Instalar App
+</button>
 <div class="product-grid" id="productGrid"></div>
 
 <div id="cartBtn" onclick="irCarrito()">🛒<div id="cartCount">0</div></div><div class="modal" id="productModal">
@@ -863,17 +856,32 @@ function actualizarEstado(){
     statusElement.className = "status cerrado";
   }
 }
+let deferredPrompt;
+const instalarBtn = document.getElementById('instalarBtn');
 
+// Detecta si se puede instalar la app
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault(); // Evita que Chrome muestre el prompt automáticamente
+  deferredPrompt = e; // Guarda el evento para mostrarlo después
+  instalarBtn.style.display = 'inline-block'; // Muestra el botón
+});
 
-/* FILTROS */
-categoriaFiltro.addEventListener("change",mostrarProductos);
-precioMin.addEventListener("input",mostrarProductos);
-precioMax.addEventListener("input",mostrarProductos);
+// Al hacer clic en el botón, muestra la instalación
+instalarBtn.addEventListener('click', async () => {
+  if (deferredPrompt) {
+    deferredPrompt.prompt(); // Muestra el prompt de instalación
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      console.log('App instalada ✅');
+    } else {
+      console.log('Instalación cancelada ❌');
+    }
+    deferredPrompt = null; // Limpia el evento
+    instalarBtn.style.display = 'none'; // Oculta el botón después
+  }
+});
 
-mostrarProductos();/* ===================== */
-/* PWA INSTALACIÓN APP   */
-/* ===================== */
-
+// Registra el service worker
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('sw.js')
@@ -881,38 +889,15 @@ if ('serviceWorker' in navigator) {
       .catch(err => console.log('Error SW:', err));
   });
 }
+setInterval(actualizarEstado,60000);
+actualizarEstado();
 
-let deferredPrompt;
-const instalarBtn = document.getElementById('instalarBtn');
+/* FILTROS */
+categoriaFiltro.addEventListener("change",mostrarProductos);
+precioMin.addEventListener("input",mostrarProductos);
+precioMax.addEventListener("input",mostrarProductos);
 
-// Detecta cuando la app puede ser instalada
-window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault();            // Evita que el navegador muestre el prompt automáticamente
-  deferredPrompt = e;            // Guardamos el evento
-  instalarBtn.style.display = 'inline-block'; // Mostramos el botón
-});
-
-// Evento click en el botón instalar
-instalarBtn.addEventListener('click', async () => {
-  if (!deferredPrompt) return;
-
-  deferredPrompt.prompt();        // Muestra el prompt de instalación
-  const { outcome } = await deferredPrompt.userChoice;
-
-  if (outcome === 'accepted') {
-    console.log('Usuario aceptó instalar la app ✅');
-  } else {
-    console.log('Usuario canceló la instalación ❌');
-  }
-
-  deferredPrompt = null;         // Limpiamos el evento
-  instalarBtn.style.display = 'none'; // Ocultamos el botón después de usarlo
-});
-
-// Opcional: detectar cuando la app se instala exitosamente
-window.addEventListener('appinstalled', () => {
-  console.log('La app fue instalada 🎉');
-});
+mostrarProductos();
 </script>
 
 </body>

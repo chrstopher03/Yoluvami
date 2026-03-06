@@ -1,11 +1,11 @@
 {
   "name": "YOLUVAMI",
   "short_name": "YOLUVAMI",
-  "description": "Tienda de lubricantes y aceites para motor e industria.",
-  "start_url": "index.html",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#1e3a8a",
   "theme_color": "#1e3a8a",
+  "orientation": "portrait-primary",
   "icons": [
     {
       "src": "23.jpeg",
