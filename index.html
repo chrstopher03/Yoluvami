@@ -329,6 +329,23 @@ line-height:1.5;
   flex: 1;
   transition: 0.3s;
 }
+#instalarBtn{
+  display:none;
+  margin-top:10px;
+  padding:10px 18px;
+  border:none;
+  border-radius:25px;
+  background:#065f46;
+  color:#fff;
+  font-weight:600;
+  font-size:13px;
+  cursor:pointer;
+  transition:0.3s;
+}
+
+#instalarBtn:hover{
+  background:#047857;
+}
 .bottomNav .navItem.active,
 .bottomNav .navItem:hover {
   color: #fff;
@@ -847,14 +864,6 @@ function actualizarEstado(){
   }
 }
 
-/* PWA INSTALAR APP */
-if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js")})}
-let deferredPrompt
-const btnInstalar=document.getElementById("instalarBtn")
-if(btnInstalar){btnInstalar.style.display="none";window.addEventListener("beforeinstallprompt",(e)=>{e.preventDefault();deferredPrompt=e;btnInstalar.style.display="block"});btnInstalar.addEventListener("click",async()=>{if(deferredPrompt){deferredPrompt.prompt();const resultado=await deferredPrompt.userChoice;if(resultado.outcome==="accepted") btnInstalar.style.display="none";deferredPrompt=null}})}
-
-setInterval(actualizarEstado,60000);
-actualizarEstado();
 
 /* FILTROS */
 categoriaFiltro.addEventListener("change",mostrarProductos);
@@ -862,6 +871,36 @@ precioMin.addEventListener("input",mostrarProductos);
 precioMax.addEventListener("input",mostrarProductos);
 
 mostrarProductos();
+/* ===================== */
+/* PWA INSTALACIÓN APP   */
+/* ===================== */
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js')
+      .then(() => console.log('Service Worker registrado ✅'))
+      .catch(err => console.log('Error SW:', err));
+  });
+}
+
+let deferredPrompt;
+const instalarBtn = document.getElementById('instalarBtn');
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  instalarBtn.style.display = 'inline-block';
+});
+
+instalarBtn.addEventListener('click', async () => {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log('Instalación:', outcome);
+    deferredPrompt = null;
+    instalarBtn.style.display = 'none';
+  }
+});
 </script>
 
 </body>
