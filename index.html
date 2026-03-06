@@ -520,6 +520,20 @@ Productos confiables y de alta calidad.
   
   </div>
 </div>
+<!-- MODAL INSTALACIÓN APP -->
+<div class="modal" id="installModal">
+  <div class="modalContent" style="max-width:400px;text-align:center;padding:25px;">
+    <div style="display:flex;justify-content:center;align-items:center;margin-bottom:15px;">
+      <img src="23.jpeg" alt="YOLUVAMI" style="width:90px;height:90px;object-fit:contain;border-radius:20px;">
+    </div>
+    <h3 style="margin:5px 0;">Instala YOLUVAMI</h3>
+    <p style="font-size:13px;color:#555;margin-bottom:18px;line-height:1.5;">
+      Añade YOLUVAMI a tu dispositivo para acceder más rápido y disfrutar de una experiencia tipo app.
+    </p>
+    <button class="modalBtn" id="installAppBtn">Instalar ahora</button>
+    <button class="modalBtn" style="background:#e5e7eb;color:#111;margin-top:8px;" onclick="closeInstall()">Más tarde</button>
+  </div>
+</div>
 <div id="deliveryBtn" onclick="abrirDelivery()" 
      style="position:fixed;right:18px;bottom:180px;background:#1e3a8a;color:#fff;width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 10px 25px rgba(0,0,0,.3);z-index:1500;cursor:pointer;">
   🚚
@@ -717,6 +731,7 @@ function agregarDesdeModal(){
 function irCarrito(){
   window.location.href = "carritoYoluvami.html";
 }
+
 /* MODAL INFO */
 function openInfo(){
   document.getElementById("infoModal").style.display = "flex";
@@ -736,6 +751,7 @@ function contactarDelivery(){
   const texto = "Hola 👋, quiero solicitar el servicio de delivery para mi pedido en Somoto.";
   window.open(`https://wa.me/50583320030?text=${encodeURIComponent(texto)}`, '_blank');
 }
+
 /* ===================== */
 /* PRODUCTOS */
 /* ===================== */
@@ -852,9 +868,8 @@ function actualizarEstado() {
 
 // Actualizar cada minuto y al inicio
 actualizarEstado();
-setInterval(actualizarEstado, 60000);
-/* ===================== */
-/* PWA INSTALAR APP       */
+setInterval(actualizarEstado, 60000);/* ===================== */
+/* PWA INSTALAR APP MODAL */
 /* ===================== */
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
@@ -865,40 +880,42 @@ if ('serviceWorker' in navigator) {
 }
 
 let deferredPrompt;
-const btnInstalar = document.getElementById('instalarBtn');
 
-if (btnInstalar) {
-  btnInstalar.style.display = 'none'; // oculto por defecto
+// Antes de instalar
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault(); // evita prompt automático
+  deferredPrompt = e;
+  console.log('PWA instalable: evento beforeinstallprompt disparado ✅');
 
-  // Evento antes de instalar
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault(); // evita el prompt automático
-    deferredPrompt = e;
-    console.log('PWA instalable: evento beforeinstallprompt disparado ✅');
-    btnInstalar.style.display = 'block'; // mostramos botón
-  });
+  // Mostrar modal personalizado
+  document.getElementById('installModal').style.display = 'flex';
+});
 
-  // Click en botón
-  btnInstalar.addEventListener('click', async () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt(); // muestra el prompt
-      const { outcome } = await deferredPrompt.userChoice;
-      console.log('Resultado instalación:', outcome);
-      if (outcome === 'accepted') {
-        console.log('Usuario aceptó instalar la app ✅');
-        btnInstalar.style.display = 'none';
-      } else {
-        console.log('Usuario canceló la instalación ❌');
-      }
-      deferredPrompt = null;
-    }
-  });
+// Botón "Instalar ahora" del modal
+const btnInstallModal = document.getElementById('installAppBtn');
+btnInstallModal.addEventListener('click', async () => {
+  if (deferredPrompt) {
+    deferredPrompt.prompt(); // prompt oficial
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log('Resultado instalación:', outcome);
+    deferredPrompt = null;
+    document.getElementById('installModal').style.display = 'none';
+  }
+});
+
+// Botón "Más tarde"
+function closeInstall() {
+  document.getElementById('installModal').style.display = 'none';
 }
-
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('installModal').style.display = 'flex'; // muestra tu modal
+});
 // Detecta si la app ya está instalada
 window.addEventListener('appinstalled', () => {
   console.log('PWA ya instalada 🎉');
-  if (btnInstalar) btnInstalar.style.display = 'none';
+  document.getElementById('installModal').style.display = 'none';
 });
 /* ===================== */
 /* FILTROS DE PRODUCTOS */
